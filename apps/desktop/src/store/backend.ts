@@ -1,6 +1,7 @@
 import { atom } from 'nanostores'
 import type { BackendState, EnvInfo, HeraldOSPrefs, WindowState } from '../../shared/ipc.ts'
 import { PALETTE_PROPERTIES, paletteVars, schemeOf } from '../../shared/theme.ts'
+import { BOT_DEFAULTS } from '../../shared/bot-prefs.ts'
 import { VOICE_DEFAULTS } from '../../shared/voice-prefs.ts'
 
 /** Cache of Electron's backend truth; Electron is authoritative. */
@@ -15,6 +16,7 @@ export const $prefs = atom<HeraldOSPrefs>({
   spaces: [{ id: 'personal', name: 'Personal', color: '#4d92ff' }],
   activeSpace: 'personal',
   favorites: [],
+  bots: BOT_DEFAULTS,
   voice: VOICE_DEFAULTS,
   // Off until the real prefs arrive, so the Overview never flashes the catch-up offer.
   continuity: { enabled: false, exclude: [] },

@@ -61,3 +61,44 @@ describe('the name on comments in the prefs', () => {
     expect(readPrefs().commentName).toBeUndefined()
   })
 })
+
+describe('the bots in the prefs', () => {
+  const saved = process.env.HERMES_HOME
+  let root = ''
+  const file = () => path.join(root, 'herald-os', 'prefs.json')
+  const onDisk = () => JSON.parse(fs.readFileSync(file(), 'utf8')) as Record<string, unknown>
+
+  function store(prefs: Record<string, unknown>) {
+    fs.mkdirSync(path.dirname(file()), { recursive: true })
+    fs.writeFileSync(file(), JSON.stringify(prefs))
+  }
+
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'herald-prefs-'))
+    process.env.HERMES_HOME = root
+  })
+
+  afterEach(() => {
+    if (saved === undefined) {
+      delete process.env.HERMES_HOME
+    } else {
+      process.env.HERMES_HOME = saved
+    }
+
+    fs.rmSync(root, { recursive: true, force: true })
+  })
+
+  it('reads a broken list as "never configured" and cleans a real one', () => {
+    store({ bots: { enabled: [' alfred ', 'mark', 'alfred', ''], last: ' mark ' } })
+    expect(readPrefs().bots).toEqual({ enabled: ['alfred', 'mark'], last: 'mark' })
+
+    store({ bots: 'junk' })
+    expect(readPrefs().bots).toEqual({ enabled: null, last: null })
+  })
+
+  it('round-trips through a write', () => {
+    writePrefs({ bots: { enabled: ['alfred', 'mark'], last: 'mark' } })
+    expect(onDisk().bots).toEqual({ enabled: ['alfred', 'mark'], last: 'mark' })
+    expect(readPrefs().bots).toEqual({ enabled: ['alfred', 'mark'], last: 'mark' })
+  })
+})

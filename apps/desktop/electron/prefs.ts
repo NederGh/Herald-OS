@@ -3,6 +3,7 @@ import path from 'node:path'
 import { type EventAutomation, isEventName } from '../shared/events.ts'
 import type { ContinuityPrefs, CrashHelpPrefs, HeraldOSPrefs } from '../shared/ipc.ts'
 import { normalizeMenuBar } from '../shared/menu-bar.ts'
+import { BOT_DEFAULTS, normalizeBotPrefs } from '../shared/bot-prefs.ts'
 import { normalizeCommentName } from '../shared/office/comment-name.ts'
 import { normalizeVoicePrefs, VOICE_DEFAULTS } from '../shared/voice-prefs.ts'
 import { heraldOsDataDir } from './paths.ts'
@@ -11,6 +12,7 @@ const CONTINUITY_DEFAULTS: ContinuityPrefs = { enabled: null, exclude: [] }
 const CRASH_HELP_DEFAULTS: CrashHelpPrefs = { enabled: true, muted: [] }
 
 const DEFAULTS: HeraldOSPrefs = {
+  bots: BOT_DEFAULTS,
   voice: VOICE_DEFAULTS,
   continuity: CONTINUITY_DEFAULTS,
   crashHelp: CRASH_HELP_DEFAULTS,
@@ -43,6 +45,7 @@ export function readPrefs(): HeraldOSPrefs {
       ...parsed,
       accent: (accent as HeraldOSPrefs['accent']) ?? DEFAULTS.accent,
       spaces: parsed.spaces?.length ? parsed.spaces : DEFAULTS.spaces,
+      bots: normalizeBotPrefs(parsed.bots),
       voice: normalizeVoicePrefs(parsed.voice),
       continuity: normalizeContinuity(parsed.continuity),
       crashHelp: normalizeCrashHelp(parsed.crashHelp),
@@ -88,6 +91,7 @@ export function writePrefs(patch: Partial<HeraldOSPrefs>): HeraldOSPrefs {
   const next = {
     ...current,
     ...patch,
+    bots: normalizeBotPrefs({ ...current.bots, ...(patch.bots ?? {}) }),
     voice: normalizeVoicePrefs({ ...current.voice, ...(patch.voice ?? {}) }),
     continuity: normalizeContinuity({ ...current.continuity, ...(patch.continuity ?? {}) }),
     crashHelp: normalizeCrashHelp({ ...current.crashHelp, ...(patch.crashHelp ?? {}) }),

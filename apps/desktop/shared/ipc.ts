@@ -437,6 +437,14 @@ export interface SpaceDef {
 /** Which pipeline turns speech into a Hermes turn and back. See docs/VOICE.md. */
 export type VoiceEngine = 'chained' | 'live'
 
+/** Which Hermes bots appear in the shell (by profile name) and the last one a conversation used. */
+export interface BotsPrefs {
+  /** null: only the default bot, as before bots existed; a list: exactly those bots; []: none chosen yet. */
+  enabled: string[] | null
+  /** The bot the next conversation starts as when none is chosen. */
+  last: string | null
+}
+
 export interface VoicePrefs {
   /** Master switch: when off, no microphone is ever opened and the orb stays hidden. */
   enabled: boolean
@@ -536,6 +544,7 @@ export interface HeraldOSPrefs {
   dockAutoHide?: boolean
   /** The name on the comments and notes the person adds in Herald Office, once they confirmed it; unset until then. */
   commentName?: string
+  bots: BotsPrefs
   voice: VoicePrefs
   continuity: ContinuityPrefs
   crashHelp: CrashHelpPrefs
