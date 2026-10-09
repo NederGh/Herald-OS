@@ -6,6 +6,7 @@ import { $applicationsOpen, toggleCommandBar } from '../store/surface.ts'
 import { $focusedWindowId, $page, $windows, closeWindow, focusWindow, goBackPage, MAIN_WINDOW_ID, minimizeWindow, openApp, showPage, toggleMaximize } from '../store/windows.ts'
 import { FLOATING_APPS, type HermesAppId, PAGES, type PageId } from '../shell/apps.ts'
 import { focusSettings } from '../features/settings/sections/shared.tsx'
+import { ITALIAN_APP_ALIASES, ITALIAN_PAGE_ALIASES } from './italian.ts'
 
 /*
  * Navigation and window commands. Page and app names accept the labels users say ("missions",
@@ -38,7 +39,8 @@ const PAGE_ALIASES: Record<string, PageId> = {
   mcp: 'connections',
   preferences: 'settings',
   options: 'settings',
-  config: 'settings'
+  config: 'settings',
+  ...ITALIAN_PAGE_ALIASES
 }
 
 const APP_ALIASES: Record<string, HermesAppId> = {
@@ -51,10 +53,11 @@ const APP_ALIASES: Record<string, HermesAppId> = {
   processes: 'system',
   cpu: 'system',
   popout: 'chat-popout',
-  'chat window': 'chat-popout'
+  'chat window': 'chat-popout',
+  ...ITALIAN_APP_ALIASES
 }
 
-const normalise = (value: string) => value.toLowerCase().replace(/^(the|my)\s+/, '').replace(/\s+(page|tab|window|app|screen|section)$/, '').trim()
+const normalise = (value: string) => value.toLowerCase().replace(/^l'/, '').replace(/^(the|my|il|lo|la|i|gli|le)\s+/, '').replace(/\s+(page|tab|window|app|screen|section|pagina|schermata|finestra|scheda|sezione)$/, '').trim()
 
 /** Resolve a spoken/typed name to a Hermes page or app id. */
 export function resolveAppId(name: string): HermesAppId | null {
