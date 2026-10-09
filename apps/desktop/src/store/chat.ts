@@ -1,10 +1,10 @@
 import type { GatewayEvent, SessionCreateResult, SessionResumeResult } from '@herald-os/client'
 import { atom, computed, map } from 'nanostores'
 import { appendSystem, appendUser, type ChatState, emptyChat, fromTranscript, reduceChatEvent } from '../lib/chat-model.ts'
-import { $env, $prefs } from './backend.ts'
+import { $env, $prefs, updatePrefs } from './backend.ts'
 import { gatewayRequest, onAnyGatewayEvent } from './gateway.ts'
 import { notify } from './notifications.ts'
-import { refreshSessions, rememberRuntimeId } from './sessions.ts'
+import { $sessions, refreshSessions, rememberRuntimeId } from './sessions.ts'
 
 export const SESSION_SOURCE = 'herald_os'
 /** Sessions this shell lists: its own (including those saved before the rename) and other interactive clients. */
@@ -34,9 +34,9 @@ const CHAT_EVENTS = new Set<GatewayEvent['type']>([
 /** Chats started in the background for a surface that shows their replies itself (an Office window's Ask Hermes bar). */
 const quietChats = new Set<string>()
 
-function adopt(result: SessionCreateResult | SessionResumeResult, fallbackStored?: string): ChatState {
+function adopt(result: SessionCreateResult | SessionResumeResult, fallbackStored?: string, bot: string | null = null): ChatState {
   const stored = result.stored_session_id ?? fallbackStored ?? result.session_id
-  const state = emptyChat(result.session_id, stored, result.info)
+  const state = emptyChat(result.session_id, stored, result.info, bot)
   state.messages = fromTranscript(result.messages ?? [])
   state.title = result.info?.title ?? state.title
   const inflight = 'inflight' in result ? result.inflight : null
@@ -83,10 +83,12 @@ export function bindChatEvents(): () => void {
 }
 
 /** A new chat; it becomes the one the Hermes window shows unless `activate` is false, and then its turns end without a notification. */
-export async function createChat(options: { cwd?: string; title?: string; activate?: boolean } = {}): Promise<ChatState> {
+export async function createChat(options: { cwd?: string; title?: string; activate?: boolean; bot?: string | null } = {}): Promise<ChatState> {
   const cwd = options.cwd ?? $prefs.get().defaultCwd ?? $env.get()?.homeDir ?? null
-  const result = await gatewayRequest('session.create', { source: SESSION_SOURCE, cwd, title: options.title ?? null })
-  const state = adopt(result)
+  // The picker's choice wins; without one the conversation runs as the last bot used, so the next chat keeps the person's bot.
+  const bot = options.bot !== undefined ? options.bot : ($prefs.get().bots.last ?? null)
+  const result = await gatewayRequest('session.create', { source: SESSION_SOURCE, cwd, title: options.title ?? null, ...(bot ? { profile: bot } : {}) })
+  const state = adopt(result, undefined, bot)
   $chats.setKey(state.sessionId, state)
 
   if (options.activate !== false) {
@@ -95,13 +97,18 @@ export async function createChat(options: { cwd?: string; title?: string; activa
     quietChats.add(state.sessionId)
   }
 
+  if (options.bot !== undefined && ($prefs.get().bots.last ?? null) !== bot) {
+    // An explicit choice is remembered quietly; a failing write must not break the conversation that just started.
+    void updatePrefs({ bots: { ...$prefs.get().bots, last: bot } }).catch(() => {})
+  }
+
   void refreshSessions()
 
   return state
 }
 
-export async function openStoredSession(storedId: string): Promise<ChatState> {
-  const existing = Object.values($chats.get()).find(chat => chat.storedSessionId === storedId)
+export async function openStoredSession(storedId: string, bot?: string | null): Promise<ChatState> {
+  const existing = Object.values($chats.get()).find(chat => chat.storedSessionId === storedId && (bot === undefined || chat.bot === bot))
 
   if (existing) {
     $activeChatId.set(existing.sessionId)
@@ -109,8 +116,10 @@ export async function openStoredSession(storedId: string): Promise<ChatState> {
     return existing
   }
 
-  const result = await gatewayRequest('session.resume', { session_id: storedId, source: SESSION_SOURCE })
-  const state = adopt(result, storedId)
+  // Each bot keeps its conversations in its own database; a resume without the profile asks the default one and the gateway answers "session not found" (rightly). The session list tags its rows, so a row id alone can be routed.
+  const resolved = bot !== undefined ? bot : ($sessions.get().find(row => row.id === storedId)?.bot ?? null)
+  const result = await gatewayRequest('session.resume', { session_id: storedId, source: SESSION_SOURCE, ...(resolved ? { profile: resolved } : {}) })
+  const state = adopt(result, storedId, resolved)
   $chats.setKey(state.sessionId, state)
   $activeChatId.set(state.sessionId)
 

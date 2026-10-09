@@ -77,18 +77,18 @@ export function CommandPalette({ onClose, standalone = false, onApplications, cl
     }
   }
 
-  const openSession = (id: string) => {
+  const openSession = (id: string, bot?: string | null) => {
     close()
 
     if (standalone) {
-      relayToMain({ type: 'open-session', args: [id] })
+      relayToMain({ type: 'open-session', args: [id, ...(bot ? [bot] : [])] })
       openSurface('main')
 
       return
     }
 
     showPage('hermes')
-    void openStoredSession(id)
+    void openStoredSession(id, bot)
   }
 
   const applications = () => {
@@ -252,7 +252,7 @@ export function CommandPalette({ onClose, standalone = false, onApplications, cl
         {filteredSessions.length > 0 && (
           <Command.Group heading="Recent sessions">
             {filteredSessions.map(session => (
-              <Item key={session.id} value={`session:${session.title ?? session.preview ?? session.id}`} onSelect={() => openSession(session.id)} icon={<IconMessage size={15} />}>
+              <Item key={session.id} value={`session:${session.title ?? session.preview ?? session.id}`} onSelect={() => openSession(session.id, session.bot)} icon={<IconMessage size={15} />}>
                 {session.title || session.preview || 'Untitled session'}
               </Item>
             ))}

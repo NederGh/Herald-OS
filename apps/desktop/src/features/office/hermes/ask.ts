@@ -398,7 +398,7 @@ export function openInHermes(docKey: string): void {
     $activeChatId.set(chat.sessionId)
     showPage('hermes')
   } else {
-    relayToMain({ type: 'open-session', args: [chat.storedSessionId] })
+    relayToMain({ type: 'open-session', args: [chat.storedSessionId, ...(chat.bot ? [chat.bot] : [])] })
     openSurface('main')
   }
 }

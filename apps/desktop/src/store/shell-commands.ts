@@ -72,10 +72,12 @@ export function handleShellCommand(command: ShellCommand): void {
     }
     case 'open-session': {
       const id = command.args?.[0]
+      const bot = command.args?.[1]
 
       if (id) {
         showPage('hermes')
-        void openStoredSession(id)
+        // A relayed session may name its bot; one that does not goes through the list lookup.
+        void openStoredSession(id, typeof bot === 'string' ? bot : undefined)
       }
 
       return

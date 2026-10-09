@@ -65,12 +65,14 @@ export interface ChatState {
   /** Id of the assistant bubble currently receiving deltas, if any. */
   openAssistantId: string | null
   hydrating: boolean
+  /** Hermes bot (its profile name) this conversation runs as; null is the default bot. */
+  bot: string | null
 }
 
 let counter = 0
 export const nextId = (prefix = 'm'): string => `${prefix}${Date.now().toString(36)}${(counter++).toString(36)}`
 
-export function emptyChat(sessionId: string, storedSessionId: string, info: SessionLiveInfo = {}): ChatState {
+export function emptyChat(sessionId: string, storedSessionId: string, info: SessionLiveInfo = {}, bot: string | null = null): ChatState {
   return {
     sessionId,
     storedSessionId,
@@ -80,7 +82,8 @@ export function emptyChat(sessionId: string, storedSessionId: string, info: Sess
     info,
     usage: info.usage ?? null,
     openAssistantId: null,
-    hydrating: false
+    hydrating: false,
+    bot
   }
 }
 

@@ -75,7 +75,7 @@ export function HermesPage() {
     setBusy(true)
 
     try {
-      await deleteSession(chat.storedSessionId)
+      await deleteSession(chat.storedSessionId, chat.bot)
       forgetChat(chat.sessionId)
       notify({ title: 'Conversation deleted', body: chat.title || undefined, level: 'info', surface: 'hermes' })
     } catch (error) {

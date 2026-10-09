@@ -76,7 +76,7 @@ export const hermesCommands: readonly OsCommand[] = [
 
       const row = matches.find(r => (r.title ?? '').toLowerCase() === needle) ?? matches[0]
       showPage('hermes')
-      await openStoredSession(row.id)
+      await openStoredSession(row.id, row.bot)
 
       return ok(`Opened "${row.title || row.preview || 'session'}"`, { page: 'hermes' })
     }
