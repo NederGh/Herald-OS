@@ -37,20 +37,22 @@ export function AgentsSection() {
       <SectionTitle title="Hermes & agents" subtitle="Choose how Hermes works with you." />
 
       <SettingsBlock label="Hermes" description="Personal agent" keywords="status identity ready connecting">
-        <GlassCard className="flex items-center gap-3.5 px-4 py-3">
-          <HermesAvatar size={44} rounded={11} />
-          <div className="min-w-0 flex-1">
-            <div className="text-[13.5px] font-semibold text-fg">Hermes</div>
-            <div className="text-[12px] text-fg-3">Personal agent</div>
-            <div className="mt-1 flex items-center gap-1.5 text-[12px] text-fg-2">
-              <StatusDot tone={ready ? 'ok' : connection === 'error' || connection === 'closed' ? 'danger' : 'warn'} pulse={!ready} />
-              {ready ? 'Ready' : connection === 'connecting' ? 'Connecting' : connection === 'error' ? 'Connection error' : connection === 'closed' ? 'Disconnected' : 'Waiting for Hermes'}
+        <GlassCard className="flex flex-col [&>.settings-item>.settings-row]:border-t [&>.settings-item>.settings-row]:border-line">
+          <div className="flex items-center gap-3.5 px-4 py-3">
+            <HermesAvatar size={44} rounded={11} />
+            <div className="min-w-0 flex-1">
+              <div className="text-[13.5px] font-semibold text-fg">Hermes</div>
+              <div className="text-[12px] text-fg-3">Personal agent</div>
+              <div className="mt-1 flex items-center gap-1.5 text-[12px] text-fg-2">
+                <StatusDot tone={ready ? 'ok' : connection === 'error' || connection === 'closed' ? 'danger' : 'warn'} pulse={!ready} />
+                {ready ? 'Ready' : connection === 'connecting' ? 'Connecting' : connection === 'error' ? 'Connection error' : connection === 'closed' ? 'Disconnected' : 'Waiting for Hermes'}
+              </div>
             </div>
           </div>
+          {/* The person's other bots, in the app's own rows, inside the same card. */}
+          <BotsBlock />
         </GlassCard>
       </SettingsBlock>
-
-      <BotsBlock />
 
       <AutonomyBlock ready={ready} />
 

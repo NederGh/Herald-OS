@@ -7,12 +7,13 @@ import { $prefs, updatePrefs } from '../../../store/backend.ts'
 import { $roster, type BotRow, refreshBots } from '../../../store/bots.ts'
 import { notify } from '../../../store/notifications.ts'
 import { refreshSessions } from '../../../store/sessions.ts'
-import { errorText, InlineNote, markSaved, SettingsGroup, SettingsRow } from './shared.tsx'
+import { errorText, InlineNote, markSaved, SettingsRow } from './shared.tsx'
 
 /*
- * Bots: the person's other Hermes bots. Which of them show up in Herald, and the guided
- * preparation of the bridge — exactly the steps the setup runs for the default bot, every one in
- * the bot's own profile and none global, run only when the person asks.
+ * Bots: the person's other Hermes bots, listed inside the Hermes card in the app's own rows.
+ * Which of them show up in Herald, and the guided preparation of the bridge — exactly the steps
+ * the setup runs for the default bot, every one in the bot's own profile and none global, run
+ * only when the person asks.
  */
 
 export function BotsBlock() {
@@ -42,11 +43,11 @@ export function BotsBlock() {
   }
 
   return (
-    <SettingsGroup title="Bots">
+    <>
       {bots.map(bot => (
         <BotSettingsRow key={bot.name} bot={bot} enabled={(prefs.bots.enabled ?? []).includes(bot.name)} onToggle={on => toggle(bot.name, on)} />
       ))}
-    </SettingsGroup>
+    </>
   )
 }
 
