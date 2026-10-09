@@ -14,7 +14,7 @@ export const botCommands: readonly OsCommand[] = [
     description: 'Start a conversation that runs as one of your Hermes bots.',
     tier: 'act',
     args: [{ name: 'bot', type: 'string', description: 'The bot, by name or title', required: true }],
-    phrases: ['talk to {bot}', 'speak with {bot}', 'start talking to {bot}', 'use {bot}'],
+    phrases: ['talk to {bot}', 'speak with {bot}', 'start talking to {bot}', 'use {bot}', 'parla con {bot}', 'fammi parlare con {bot}', 'vorrei parlare con {bot}'],
     run: async ({ bot }) => {
       await refreshBots()
       const options = $botOptions.get()
@@ -32,7 +32,7 @@ export const botCommands: readonly OsCommand[] = [
       const chat = await createChat({ bot: match.name })
       showPage('hermes')
 
-      return ok(`Talking with ${match.label}`, { page: 'hermes', data: { sessionId: chat.sessionId, bot: match.name } })
+      return ok(`Talking with ${match.label}`, { spoken: `Talking with ${match.label}.`, page: 'hermes', data: { sessionId: chat.sessionId, bot: match.name } })
     }
   },
   {
