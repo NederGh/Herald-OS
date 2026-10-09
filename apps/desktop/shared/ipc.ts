@@ -437,6 +437,17 @@ export interface SpaceDef {
 /** Which pipeline turns speech into a Hermes turn and back. See docs/VOICE.md. */
 export type VoiceEngine = 'chained' | 'live'
 
+/**
+ * One audio device the person chose, remembered across reconnects. `id` is Chromium's `deviceId`,
+ * which is only stable for one origin, so `label` is the fallback identity when it changes.
+ */
+export interface AudioDevicePref {
+  /** Chromium's `deviceId`; up to 256 characters, refused if longer. */
+  id: string
+  /** The device name as Chromium reports it, up to 200 characters. */
+  label: string
+}
+
 /** Which Hermes bots appear in the shell (by profile name) and the last one a conversation used. */
 export interface BotsPrefs {
   /** null: only the default bot, as before bots existed; a list: exactly those bots; []: none chosen yet. */
@@ -490,6 +501,12 @@ export interface VoicePrefs {
   liveDailyCapMinutes: number
   /** Live engine: seconds of session time used on `day` (YYYY-MM-DD, local). */
   liveUsage: { day: string; seconds: number }
+  /** Microphone the voice uses; `null` follows the system default. Only when Herald owns the audio path (see docs/VOICE.md). */
+  inputDevice: AudioDevicePref | null
+  /** Speaker the voice plays through; `null` follows the system default. */
+  outputDevice: AudioDevicePref | null
+  /** Volume of Herald's voice, 0 to 100. Never touches the system volume. */
+  outputVolume: number
 }
 
 export type MicPermission = 'granted' | 'denied' | 'not-determined' | 'restricted' | 'unknown'
