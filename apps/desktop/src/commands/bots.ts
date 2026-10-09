@@ -45,8 +45,8 @@ export const botCommands: readonly OsCommand[] = [
       { name: 'show', type: 'boolean', description: 'true to show it in Herald, false to hide it' }
     ],
     phrases: [
-      ...['show {bot}', 'add {bot} to herald', 'put {bot} in herald'].map(phrase => ({ phrase, args: { show: true } })),
-      ...['hide {bot}', 'remove {bot} from herald'].map(phrase => ({ phrase, args: { show: false } }))
+      ...['show {bot}', 'add {bot} to herald', 'put {bot} in herald', 'mostra {bot}', 'fai vedere {bot}', 'aggiungi {bot} a herald'].map(phrase => ({ phrase, args: { show: true } })),
+      ...['hide {bot}', 'remove {bot} from herald', 'nascondi {bot}', 'togli {bot} da herald'].map(phrase => ({ phrase, args: { show: false } }))
     ],
     run: async ({ bot, show }) => {
       await refreshBots()
@@ -86,7 +86,7 @@ export const botCommands: readonly OsCommand[] = [
     description: 'List the bots a conversation can run as, with the one in front first.',
     tier: 'read',
     args: [],
-    phrases: ['list my bots', 'which bots do I have', 'what bots can I talk to'],
+    phrases: ['list my bots', 'which bots do I have', 'what bots can I talk to', 'elenca i bot', 'quali bot ho', 'che bot ho'],
     run: async () => {
       await refreshBots()
       const options = $botOptions.get()

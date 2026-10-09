@@ -30,6 +30,8 @@ const commands: CommandSummary[] = [
     phrases: [{ phrase: 'create a website for {goal}', args: { prefix: 'a website for' } }, { phrase: 'build me an app that {goal}', args: { prefix: 'an app that' } }, 'build me {goal}']
   },
   { id: 'bots.use', title: 'Talk to a bot', description: '', tier: 'act', hidden: false, args: [{ name: 'bot', type: 'string', description: '', required: true }], phrases: ['talk to {bot}', 'parla con {bot}', 'fammi parlare con {bot}', 'vorrei parlare con {bot}'] },
+  { id: 'bots.enabled.set', title: 'Show or hide a bot in Herald', description: '', tier: 'mutate', hidden: false, args: [{ name: 'bot', type: 'string', description: '', required: true }, { name: 'show', type: 'boolean', description: '' }], phrases: [...['show {bot}', 'mostra {bot}'].map(phrase => ({ phrase, args: { show: true } })), ...['nascondi {bot}'].map(phrase => ({ phrase, args: { show: false } }))] },
+  { id: 'bots.list', title: 'List your bots', description: '', tier: 'read', hidden: false, args: [], phrases: ['list my bots', 'elenca i bot', 'quali bot ho', 'che bot ho'] },
   { id: 'studio.open', title: 'Show the Studio', description: '', tier: 'read', hidden: false, args: [], phrases: ['show me the code', 'show me what youre doing', 'show me'] },
   { id: 'overlay.applications', title: 'Show all apps', description: '', tier: 'read', hidden: false, args: [], phrases: ['show applications', 'open apps', 'open my apps', 'show all apps'] },
   {
@@ -302,5 +304,9 @@ describe('the bot commands speak Italian too', () => {
     expect(route('fammi parlare con alfred per favore')).toMatchObject({ command: 'bots.use', args: { bot: 'alfred' } })
     expect(route('Vorrei parlare con Sally, grazie')).toMatchObject({ command: 'bots.use', args: { bot: 'Sally' } })
     expect(route('talk to Alfred')).toMatchObject({ command: 'bots.use', args: { bot: 'Alfred' } })
+    expect(route('mostra Alfred')).toMatchObject({ command: 'bots.enabled.set', args: { bot: 'Alfred', show: true } })
+    expect(route('nascondi Alfred.')).toMatchObject({ command: 'bots.enabled.set', args: { bot: 'Alfred', show: false } })
+    expect(route('elenca i bot')).toMatchObject({ command: 'bots.list' })
+    expect(route('quali bot ho')).toMatchObject({ command: 'bots.list' })
   })
 })
