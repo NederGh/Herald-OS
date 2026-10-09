@@ -1,5 +1,6 @@
 import { registerOsCommands } from '../commands/index.ts'
 import { bindAgentEvents } from './agents.ts'
+import { bindBots } from './bots.ts'
 import { bindRecording } from './capture.ts'
 import { bindEditTarget } from './edit-target.ts'
 import { bindBackendStores } from './backend.ts'
@@ -48,6 +49,7 @@ export function bootRenderer(): void {
   bindServerRequests()
   bindNotificationEvents()
   bindAgentEvents()
+  bindBots()
   bindMissionEvents()
   bindSidebarPrefs()
   bindVoice()

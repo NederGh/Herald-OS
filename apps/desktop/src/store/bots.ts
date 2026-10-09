@@ -1,7 +1,7 @@
 import { computed, atom } from 'nanostores'
 import { $prefs } from './backend.ts'
 import type { BotBridgeState } from '../../shared/ipc.ts'
-import { gatewayRequest, isGatewayOpen } from './gateway.ts'
+import { $connectionEpoch, gatewayRequest, isGatewayOpen } from './gateway.ts'
 
 /** One bot, as the roster serves it and the shell shows it. */
 export interface BotRow {
@@ -147,4 +147,25 @@ export function matchBot(options: readonly BotOption[], query: string): { match:
 /** A bot joins Herald once its bridge is ready: linked, plugin and tools on, and nothing failed. */
 export function botReady(state: BotBridgeState | null): boolean {
   return Boolean(state && !state.error && state.linked && state.pluginEnabled && state.toolsEnabled)
+}
+
+let bound = false
+
+/** Read the roster on every fresh gateway connection: the shell cannot know the bots before the gateway answers. */
+export function bindBots(): () => void {
+  if (bound) {
+    return () => undefined
+  }
+
+  bound = true
+  const offEpoch = $connectionEpoch.subscribe(epoch => {
+    if (epoch > 0) {
+      void refreshBots()
+    }
+  })
+
+  return () => {
+    offEpoch()
+    bound = false
+  }
 }
