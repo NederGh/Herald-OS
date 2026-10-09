@@ -7,7 +7,6 @@ import { formatRelative } from '../../lib/format.ts'
 import { $botOptions, refreshBots } from '../../store/bots.ts'
 import { $activeChatId, $chats, createChat, forgetChat, LISTED_SESSION_SOURCES, openStoredSession } from '../../store/chat.ts'
 import { $runtimeIds, $sessions, deleteSession } from '../../store/sessions.ts'
-import { BotPicker } from './BotPicker.tsx'
 
 export function SessionList() {
   const sessions = useStore($sessions)
@@ -26,17 +25,9 @@ export function SessionList() {
     <aside className="flex w-64 shrink-0 flex-col border-r border-hairline">
       <div className="flex items-center justify-between px-3 py-2.5">
         <span className="text-[11px] font-medium tracking-[0.08em] text-fg-3 uppercase">Sessions</span>
-        {botOptions.length > 1 ? (
-          <BotPicker onPick={bot => void createChat({ bot })}>
-            <Button variant="ghost" size="icon-sm" aria-label="New session, choose a bot" aria-haspopup="menu">
-              <IconPlus size={15} />
-            </Button>
-          </BotPicker>
-        ) : (
-          <Button variant="ghost" size="icon-sm" aria-label="New session" onClick={() => void createChat()}>
-            <IconPlus size={15} />
-          </Button>
-        )}
+        <Button variant="ghost" size="icon-sm" aria-label="New session" onClick={() => void createChat()}>
+          <IconPlus size={15} />
+        </Button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-1.5 pb-2">
         {visible.length === 0 && <div className="px-2 py-4 text-[12px] text-fg-4">No sessions yet. Say something to Hermes.</div>}
