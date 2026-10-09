@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { botReady, matchBot, type BotOption } from './bots.ts'
 
 // The store reads the gateway and the preload bridge when it loads; tests run without a DOM.
-vi.mock('./gateway.ts', () => ({ gatewayRequest: async () => ({}), isGatewayOpen: () => false }))
+vi.mock('./gateway.ts', () => ({ $connectionEpoch: { get: () => 0, subscribe: () => () => undefined }, gatewayRequest: async () => ({}), isGatewayOpen: () => false }))
 
 const options: BotOption[] = [
   { name: null, label: 'Hermes', description: '' },
