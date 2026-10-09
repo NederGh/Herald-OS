@@ -178,14 +178,18 @@ export async function prepareBotBridge(runtime: BackendRuntime, name: string, re
     return { ok: false, steps }
   }
 
-  // The plugin to link: beside a packaged app, or in the checkout Herald OS runs from.
+  // The plugin to link: beside a packaged app, in the checkout Herald OS runs from, or the copy the
+  // Hermes home already has (a checkout's bootstrap links it there; the app links it when packaged).
   const has = (dir: string) => Boolean(dir) && fs.existsSync(path.join(dir, 'plugin.yaml'))
   const bundled = resources ? path.join(resources, 'herald-os-bridge') : ''
   const checkout = runtime.root ? path.join(runtime.root, 'plugins', 'herald-os-bridge') : ''
-  const source = has(bundled) ? bundled : has(checkout) ? checkout : ''
+  const homeCopy = path.join(hermesHome(), 'plugins', 'herald-os-bridge')
+  const homeEntry = readEntry(homeCopy)
+  const installed = homeEntry.kind === 'link' ? homeEntry.target : homeEntry.kind === 'folder' ? homeCopy : ''
+  const source = has(bundled) ? bundled : has(checkout) ? checkout : has(installed) ? installed : ''
 
   if (!source) {
-    return stop('Find the plugin to link', 'no herald-os-bridge plugin beside the app or in the runtime checkout')
+    return stop('Find the plugin to link', 'no herald-os-bridge plugin beside the app, in the runtime checkout, or in the Hermes home')
   }
 
   const link = path.join(hermesHome(), 'profiles', name, 'plugins', 'herald-os-bridge')

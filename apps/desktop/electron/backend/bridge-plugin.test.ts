@@ -177,4 +177,23 @@ describe('prepareBotBridge', () => {
     expect(calls()).not.toContain('-p alfred config set tools.tool_search.enabled off')
     expect(fs.existsSync(path.join(root, 'hermes', 'herald-os', 'tool-search-before-alfred'))).toBe(false)
   })
+
+  it('finds the copy already linked into the Hermes home when the app carries none (development)', async () => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'botbridge-'))
+    process.env.HERMES_HOME = path.join(root, 'hermes')
+    const realCopy = path.join(root, 'Herald-OS', 'plugins', 'herald-os-bridge')
+    fs.mkdirSync(realCopy, { recursive: true })
+    fs.writeFileSync(path.join(realCopy, 'plugin.yaml'), 'name: herald-os-bridge\n')
+    fs.mkdirSync(path.join(root, 'hermes', 'plugins'), { recursive: true })
+    fs.symlinkSync(realCopy, path.join(root, 'hermes', 'plugins', 'herald-os-bridge'))
+    const calls = path.join(root, 'calls.txt')
+    const body = `echo "$*" >> '${calls}'; case "$*" in *"config get"*) echo 'auto';; esac; exit 0`
+    const runtime = { kind: 'managed' as const, label: 'test', command: ['/bin/sh', '-c', body, 'hermes'] }
+
+    const report = await prepareBotBridge(runtime, 'alfred', path.join(root, 'no-app-copy'))
+
+    expect(report.ok).toBe(true)
+    const link = path.join(root, 'hermes', 'profiles', 'alfred', 'plugins', 'herald-os-bridge')
+    expect(fs.readlinkSync(link)).toBe(realCopy)
+  })
 })
