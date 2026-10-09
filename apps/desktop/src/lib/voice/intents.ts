@@ -193,8 +193,8 @@ const OFFICE_REQUESTS: readonly RegExp[] = [
 const DOCUMENT_DESCRIPTION = /\b(invoices?|receipts?|bills|statements?|payslips?|contracts?|from|sent by|dated)\b/i
 const NAMED_FILE = /\.[a-z0-9]{1,5}$|\s+dot\s+[a-z0-9]{1,5}$/i
 
-/** Commands that look a file, folder or app up by its name: a description is no name. */
-const LOOKUP_COMMANDS = new Set(['open.any', 'file.open', 'files.search'])
+/** Commands that look a file, folder, app or bot up by its name: a description is no name. */
+const LOOKUP_COMMANDS = new Set(['open.any', 'file.open', 'files.search', 'bots.use', 'bots.enabled.set'])
 
 /** Commands whose "that" is ambiguous right after Hermes acted. */
 const UNDO_COMMANDS = new Set(['edit.undo', 'edit.redo'])
