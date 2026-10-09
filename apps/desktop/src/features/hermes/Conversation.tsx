@@ -1,9 +1,11 @@
 import { useStore } from '@nanostores/react'
 import { IconChevronRight, IconUser } from '@tabler/icons-react'
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { HermesAvatar } from '../../components/app-icon.tsx'
+import { BotAvatar, HermesAvatar } from '../../components/app-icon.tsx'
 import { cn } from '../../lib/cn.ts'
 import type { AssistantMessage, ChatMessage, ChatState, SystemMessage, ToolMessage, UserMessage } from '../../lib/chat-model.ts'
+import { $prefs } from '../../store/backend.ts'
+import { $botOptions, type BotOption } from '../../store/bots.ts'
 import { interruptChat, runSlash, sendPrompt } from '../../store/chat.ts'
 import type { Artifact } from '../../store/missions.ts'
 import { $activeSpace } from '../../store/spaces.ts'
@@ -15,6 +17,26 @@ import { SuggestionChips } from './SuggestionChips.tsx'
 import { ToolSummaryRow } from './ToolSummaryRow.tsx'
 
 const HERO_SUGGESTIONS = ["What's using the most CPU right now?", 'Find the screenshots I took yesterday', 'Draft a brief for my next product review', 'What is taking up my disk space?']
+
+/** The face of the bot a conversation runs as: the shell's own mark for the default, the bot's picture otherwise. */
+function BotFace({ bot, size, rounded, className }: { bot: string | null; size: number; rounded: number; className?: string }) {
+  const options = useStore($botOptions)
+
+  if (bot === null) {
+    return <HermesAvatar size={size} rounded={rounded} className={className} />
+  }
+
+  const option = options.find(entry => entry.name === bot)
+
+  return <BotAvatar image={option?.avatar ?? null} name={option?.label ?? bot} size={size} shape={option?.shape ?? null} className={className} />
+}
+
+/** What the conversation area calls the bot it runs as. */
+function botName(bot: string | null, options: readonly BotOption[]): string {
+  const option = options.find(entry => entry.name === bot)
+
+  return option?.label ?? (bot ?? 'Hermes')
+}
 
 /** A user prompt and everything Hermes did in response, up to the next prompt. */
 interface Turn {
@@ -70,6 +92,10 @@ function blocksOf(items: ChatMessage[]): Block[] {
 
 export function Conversation({ chat, online }: { chat: ChatState | null; online: boolean }) {
   const space = useStore($activeSpace)
+  const prefs = useStore($prefs)
+  const options = useStore($botOptions)
+  // The open conversation's own bot; without one, the bot new conversations will run as.
+  const areaBot = chat ? (chat.bot ?? null) : (prefs.bots.last ?? null)
   const submit = async (text: string): Promise<void> => {
     await (text.startsWith('/') ? runSlash(text) : sendPrompt(text))
   }
@@ -77,14 +103,14 @@ export function Conversation({ chat, online }: { chat: ChatState | null; online:
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex items-center gap-3 border-b border-line px-5 py-3.5">
-        <HermesAvatar size={36} rounded={10} />
+        <BotFace bot={areaBot} size={36} rounded={10} />
         <div className="min-w-0">
-          <div className="truncate text-[15px] leading-tight font-semibold text-fg">Hermes</div>
+          <div className="truncate text-[15px] leading-tight font-semibold text-fg">{botName(areaBot, options)}</div>
           <div className="truncate text-[12px] text-fg-3">{chat?.title || `${space?.name ?? 'Personal'} workspace`}</div>
         </div>
       </div>
 
-      {chat ? <Transcript chat={chat} online={online} /> : <Hero online={online} />}
+      {chat ? <Transcript chat={chat} online={online} /> : <Hero online={online} bot={areaBot} label={botName(areaBot, options)} />}
 
       <div className="shrink-0 px-4 pb-4 pt-2">
         <HermesComposer autoFocus disabled={!online} streaming={chat?.streaming} placeholder={online ? 'Ask Hermes anything…' : 'Connecting to Hermes…'} onSubmit={submit} onInterrupt={() => void interruptChat()} />
@@ -93,12 +119,12 @@ export function Conversation({ chat, online }: { chat: ChatState | null; online:
   )
 }
 
-function Hero({ online }: { online: boolean }) {
+function Hero({ online, bot, label }: { online: boolean; bot: string | null; label: string }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6 px-6 page-enter">
-      <HermesAvatar size={48} rounded={14} />
+      <BotFace bot={bot} size={48} rounded={14} />
       <div className="text-center">
-        <div className="text-[20px] font-semibold tracking-tight text-fg">Hermes</div>
+        <div className="text-[20px] font-semibold tracking-tight text-fg">{label}</div>
         <div className="mt-1 text-[13px] text-fg-3">Your computer, in conversation.</div>
       </div>
       <div className="stagger grid w-full max-w-md grid-cols-2 gap-2">
@@ -169,7 +195,7 @@ function Transcript({ chat, online }: { chat: ChatState; online: boolean }) {
               {divider && <DayDivider label={day} />}
               {turn.user && <UserBubble message={turn.user} />}
               {blocksOf(turn.items).map(block =>
-                block.kind === 'tools' ? <ToolSummaryRow key={block.id} tools={block.tools} /> : block.message.role === 'assistant' ? <AssistantBubble key={block.id} message={block.message} /> : <SystemRow key={block.id} message={block.message} />
+                block.kind === 'tools' ? <ToolSummaryRow key={block.id} tools={block.tools} /> : block.message.role === 'assistant' ? <AssistantBubble key={block.id} message={block.message} bot={chat.bot ?? null} /> : <SystemRow key={block.id} message={block.message} />
               )}
               {finished && produced.map(artifact => <ArtifactCard key={artifact.path} artifact={artifact} selected={selected?.path === artifact.path} onSelect={() => selectArtifact(artifact.path)} />)}
               {isLast && lastComplete && <SuggestionChips hasArtifact={artifacts.some((a: Artifact) => a.kind === 'file')} disabled={!online} onPick={text => void sendPrompt(text)} />}
@@ -210,14 +236,14 @@ const UserBubble = memo(function UserBubble({ message }: { message: UserMessage 
   )
 })
 
-const AssistantBubble = memo(function AssistantBubble({ message }: { message: AssistantMessage }) {
+const AssistantBubble = memo(function AssistantBubble({ message, bot }: { message: AssistantMessage; bot: string | null }) {
   const [showReasoning, setShowReasoning] = useState(false)
   const hasReasoning = message.reasoning.trim().length > 0
   const text = message.text.replace(/^\s+/, '')
 
   return (
     <div className="flex items-start gap-3">
-      <HermesAvatar size={28} rounded={8} className={cn('mt-1', message.streaming && 'animate-pulse-soft')} />
+      <BotFace bot={bot} size={28} rounded={8} className={cn('mt-1', message.streaming && 'animate-pulse-soft')} />
       <div className="glass-card min-w-0 max-w-[85%] rounded-xl px-4 py-2.5">
         {hasReasoning && (
           <button type="button" onClick={() => setShowReasoning(v => !v)} className="mb-1 flex items-center gap-1 text-[11.5px] text-fg-3 hover:text-fg-2">
