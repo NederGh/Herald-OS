@@ -1,7 +1,7 @@
 import { useStore } from '@nanostores/react'
-import { IconRobot } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import type { BotBridgeState, BotsPrepareResult } from '../../../../shared/ipc.ts'
+import { BotAvatar } from '../../../components/app-icon.tsx'
 import { GlassButton, Pill, Toggle } from '../../../components/ui/glass.tsx'
 import { $prefs, updatePrefs } from '../../../store/backend.ts'
 import { $roster, type BotRow, refreshBots } from '../../../store/bots.ts'
@@ -87,9 +87,8 @@ function BotSettingsRow({ bot, enabled, onToggle }: { bot: BotRow; enabled: bool
 
   return (
     <SettingsRow
-      icon={<IconRobot />}
+      icon={<BotAvatar image={bot.avatar} name={bot.label} size={32} shape={bot.shape} />}
       label={bot.label}
-      description={bot.description || 'Hermes bot'}
       keywords={`bot ${bot.name}`}
       below={
         <>

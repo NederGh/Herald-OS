@@ -139,6 +139,21 @@ export function HermesAvatar({ size = 40, className, rounded = 10 }: { size?: nu
   )
 }
 
+/** A bot without a picture shows its initial where a glyph would sit; `squircle` keeps the app's soft-square rounding, the rest read round. */
+export function BotAvatar({ image, name, size = 40, shape, className }: { image?: string | null; name: string; size?: number; shape?: string | null; className?: string }) {
+  const borderRadius = shape === 'squircle' ? Math.round(size * 0.22) : Math.round(size / 2)
+
+  if (!image) {
+    return (
+      <span aria-hidden="true" className={cn('flex shrink-0 items-center justify-center font-semibold text-fg', className)} style={{ width: size, height: size, fontSize: Math.round(size * 0.38) }}>
+        {name.slice(0, 1).toUpperCase()}
+      </span>
+    )
+  }
+
+  return <img src={image} alt={name} width={size} height={size} draggable={false} className={cn('shrink-0 bg-paper object-cover shadow-[0_2px_10px_rgba(0,10,60,.45)]', className)} style={{ borderRadius }} />
+}
+
 export function AppGlyph({ id, size = 22, className, stroke = 1.7 }: { id: AppIconId; size?: number; className?: string; stroke?: number }) {
   if (id === 'hermes') {
     return <HermesAvatar size={size} rounded={Math.round(size * 0.22)} className={className} />

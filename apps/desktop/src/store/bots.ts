@@ -11,6 +11,10 @@ export interface BotRow {
   /** The bot's own words about itself, when set. */
   description: string
   isDefault: boolean
+  /** The bot's picture, as a data URL, the same one Hermes shows (`assets/avatar.*`). */
+  avatar?: string | null
+  /** The avatar's shape from the bot's own metadata (`squircle` is a soft square; the rest read round). */
+  shape?: string | null
 }
 
 /** The picker's view: the default bot (no profile travels) plus whoever the person enabled, in their order. */
@@ -19,6 +23,10 @@ export interface BotOption {
   name: string | null
   label: string
   description: string
+  /** The bot's picture, as a data URL, when it has one. */
+  avatar?: string | null
+  /** The avatar's shape from the bot's own metadata. */
+  shape?: string | null
 }
 
 export const $roster = atom<BotRow[]>([])
@@ -33,6 +41,35 @@ function titleOf(row: { name: string; display_name?: string | null; is_default?:
   return title || display || (row.is_default ? 'Hermes' : row.name)
 }
 
+/** Avatars fetched once per session; a miss (no picture) is not cached, so a new one shows up on the next read. */
+const avatarCache = new Map<string, string>()
+
+/** The bot's picture, straight from Hermes's own store (`profiles.get_asset`, the face Bot Mode shows). */
+async function avatarFor(name: string, has: boolean): Promise<string | null> {
+  if (!has) {
+    return null
+  }
+
+  const cached = avatarCache.get(name)
+
+  if (cached) {
+    return cached
+  }
+
+  try {
+    const result = await gatewayRequest('profiles.get_asset', { name, asset: 'avatar' })
+    const url = result?.found && result.data ? result.data : null
+
+    if (url) {
+      avatarCache.set(name, url)
+    }
+
+    return url
+  } catch {
+    return null
+  }
+}
+
 /** Read the roster from the gateway; safe to call often (the picker refreshes it when it opens, so names are current). */
 export async function refreshBots(): Promise<void> {
   if (!isGatewayOpen()) {
@@ -43,12 +80,26 @@ export async function refreshBots(): Promise<void> {
 
   try {
     const result = await gatewayRequest('profiles.list', {})
-    const rows = (result.profiles ?? []).map(row => ({
-      name: row.name,
-      label: titleOf(row),
-      description: typeof row.description === 'string' ? row.description.trim() : '',
-      isDefault: Boolean(row.is_default)
-    }))
+    const profiles = result.profiles ?? []
+    const avatars = new Map<string, string | null>()
+    await Promise.all(
+      profiles.map(async row => {
+        avatars.set(row.name, await avatarFor(row.name, Boolean(row.has_avatar)))
+      })
+    )
+    const rows: BotRow[] = profiles.map(row => {
+      const meta = row.ui_meta && typeof row.ui_meta === 'object' ? (row.ui_meta as Record<string, unknown>)['hermes-bots'] : undefined
+      const metaObject = meta && typeof meta === 'object' ? (meta as Record<string, unknown>) : {}
+
+      return {
+        name: row.name,
+        label: titleOf(row),
+        description: typeof row.description === 'string' ? row.description.trim() : '',
+        isDefault: Boolean(row.is_default),
+        shape: typeof metaObject.shape === 'string' ? metaObject.shape : null,
+        avatar: avatars.get(row.name) ?? null
+      }
+    })
     $roster.set([...rows].sort((a, b) => Number(b.isDefault) - Number(a.isDefault)))
   } catch {
     // Keep the cached roster; the next refresh retries.
@@ -62,19 +113,15 @@ export const $botOptions = computed([$roster, $prefs], (roster, prefs) => {
   const defaults = roster.filter(row => row.isDefault)
   const enabled = prefs.bots.enabled
 
+  const optionOf = (row: BotRow, name: string | null): BotOption => ({ name, label: row.label, description: row.description, avatar: row.avatar ?? null, shape: row.shape ?? null })
+
   if (!enabled || enabled.length === 0) {
-    return defaults.map(({ name, label, description }) => ({ name, label, description }))
+    return defaults.map(row => optionOf(row, null))
   }
 
   const byName = new Map(roster.map(row => [row.name, row]))
 
-  return [
-    ...defaults.map(({ name, label, description }) => ({ name, label, description })),
-    ...enabled.flatMap(name => {
-      const row = byName.get(name)
-      return row ? [{ name: row.name, label: row.label, description: row.description }] : []
-    })
-  ]
+  return [...defaults.map(row => optionOf(row, null)), ...enabled.flatMap(name => (byName.has(name) ? [optionOf(byName.get(name) as BotRow, name)] : []))]
 })
 
 /** Match a spoken or typed name: an exact label or profile name wins, then a lone partial; several partials ask. */
