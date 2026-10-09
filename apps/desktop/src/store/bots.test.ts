@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { matchBot, type BotOption } from './bots.ts'
+import { botReady, matchBot, type BotOption } from './bots.ts'
 
 // The store reads the gateway and the preload bridge when it loads; tests run without a DOM.
 vi.mock('./gateway.ts', () => ({ gatewayRequest: async () => ({}), isGatewayOpen: () => false }))
@@ -33,5 +33,15 @@ describe('matchBot', () => {
   it('offers everything when the query is empty, nothing when it matches none', () => {
     expect(matchBot(options, '  ').candidates).toHaveLength(4)
     expect(matchBot(options, 'zzz').candidates).toEqual([])
+  })
+})
+
+describe('botReady', () => {
+  it('is ready only with the link, the plugin and the tools on, and nothing failed', () => {
+    expect(botReady(null)).toBe(false)
+    expect(botReady({ linked: true, pluginEnabled: true, toolsEnabled: true })).toBe(true)
+    expect(botReady({ linked: true, pluginEnabled: true, toolsEnabled: false })).toBe(false)
+    expect(botReady({ linked: false, pluginEnabled: true, toolsEnabled: true })).toBe(false)
+    expect(botReady({ linked: true, pluginEnabled: true, toolsEnabled: true, error: 'nope' })).toBe(false)
   })
 })

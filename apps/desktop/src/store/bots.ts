@@ -1,5 +1,6 @@
 import { computed, atom } from 'nanostores'
 import { $prefs } from './backend.ts'
+import type { BotBridgeState } from '../../shared/ipc.ts'
 import { gatewayRequest, isGatewayOpen } from './gateway.ts'
 
 /** One bot, as the roster serves it and the shell shows it. */
@@ -141,4 +142,9 @@ export function matchBot(options: readonly BotOption[], query: string): { match:
   const partial = options.filter(option => option.label.toLowerCase().includes(needle) || (option.name ?? '').toLowerCase().includes(needle))
 
   return { match: partial.length === 1 ? partial[0] : null, candidates: partial }
+}
+
+/** A bot joins Herald once its bridge is ready: linked, plugin and tools on, and nothing failed. */
+export function botReady(state: BotBridgeState | null): boolean {
+  return Boolean(state && !state.error && state.linked && state.pluginEnabled && state.toolsEnabled)
 }
