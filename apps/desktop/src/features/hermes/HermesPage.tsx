@@ -1,7 +1,10 @@
 import { useStore } from '@nanostores/react'
 import { IconArrowUpRight, IconHistory, IconPencil, IconPlus, IconTrash, IconX } from '@tabler/icons-react'
 import { useEffect, useRef, useState } from 'react'
-import { GlassButton, GlassCard, MoreButton } from '../../components/ui/glass.tsx'
+import { BotAvatar, HermesAvatar } from '../../components/app-icon.tsx'
+import { Dropdown, GlassButton, GlassCard, MoreButton } from '../../components/ui/glass.tsx'
+import { Dot } from '../../components/ui/primitives.tsx'
+import { $prefs, updatePrefs } from '../../store/backend.ts'
 import { $botOptions, refreshBots } from '../../store/bots.ts'
 import { $activeChat, $activeChatId, $chats, createChat, forgetChat } from '../../store/chat.ts'
 import { $connection } from '../../store/gateway.ts'
@@ -24,6 +27,9 @@ export function HermesPage() {
   const connection = useStore($connection)
   const online = connection === 'open'
   const botOptions = useStore($botOptions)
+  const prefs = useStore($prefs)
+  const activeName = prefs.bots.last ?? null
+  const activeBot = botOptions.find(option => option.name === activeName) ?? botOptions.find(option => option.name === null) ?? null
   const [menuOpen, setMenuOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -36,6 +42,11 @@ export function HermesPage() {
   useEffect(() => {
     void refreshBots()
   }, [])
+
+  // Choosing in the selector only remembers the bot; New conversation then runs as it.
+  const selectBot = (bot: string | null) => {
+    void updatePrefs({ bots: { ...$prefs.get().bots, last: bot } }).catch(() => {})
+  }
 
   // Picking a session from the drawer closes it.
   useEffect(() => {
@@ -116,19 +127,22 @@ export function HermesPage() {
             className="glass-input h-9 w-72 rounded-lg px-3 text-[13px] outline-none placeholder:text-fg-4 animate-pop"
           />
         )}
-        {botOptions.length > 1 ? (
-          <BotPicker onPick={bot => void createChat({ bot })}>
-            <GlassButton disabled={!online} aria-label="New conversation, choose a bot" aria-haspopup="menu">
-              <IconPlus />
-              New conversation
-            </GlassButton>
+        {botOptions.length > 1 && activeBot && (
+          <BotPicker onPick={selectBot}>
+            <Dropdown
+              label={
+                <span className="flex items-center gap-1.5">
+                  {activeBot.name === null ? <HermesAvatar size={18} rounded={5} /> : activeBot.avatar ? <BotAvatar image={activeBot.avatar} name={activeBot.label} size={18} shape={activeBot.shape} /> : <Dot tone="accent" />}
+                  <span className="max-w-[120px] truncate">{activeBot.label}</span>
+                </span>
+              }
+            />
           </BotPicker>
-        ) : (
-          <GlassButton onClick={() => void createChat()} disabled={!online} aria-label="New conversation">
-            <IconPlus />
-            New conversation
-          </GlassButton>
         )}
+        <GlassButton onClick={() => void createChat()} disabled={!online} aria-label="New conversation">
+          <IconPlus />
+          New conversation
+        </GlassButton>
         <PopMenu open={menuOpen} onClose={() => setMenuOpen(false)} trigger={<MoreButton aria-label="Conversation actions" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)} />}>
           <MenuItem icon={<IconPencil />} disabled={!chat} onClick={startRename}>
             Rename
