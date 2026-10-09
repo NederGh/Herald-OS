@@ -7,13 +7,13 @@ import { $prefs, updatePrefs } from '../../../store/backend.ts'
 import { $roster, type BotRow, refreshBots } from '../../../store/bots.ts'
 import { notify } from '../../../store/notifications.ts'
 import { refreshSessions } from '../../../store/sessions.ts'
-import { errorText, InlineNote, markSaved, SettingsRow } from './shared.tsx'
+import { errorText, Filterable, InlineNote, markSaved } from './shared.tsx'
 
 /*
- * Bots: the person's other Hermes bots, listed inside the Hermes card in the app's own rows.
- * Which of them show up in Herald, and the guided preparation of the bridge — exactly the steps
- * the setup runs for the default bot, every one in the bot's own profile and none global, run
- * only when the person asks.
+ * Bots: the person's other Hermes bots, listed inside the Hermes card under its first line — each
+ * row matching it, avatar and all. Which of them show up in Herald, and the guided preparation of
+ * the bridge — exactly the steps the setup runs for the default bot, every one in the bot's own
+ * profile and none global, run only when the person asks.
  */
 
 export function BotsBlock() {
@@ -87,60 +87,62 @@ function BotSettingsRow({ bot, enabled, onToggle }: { bot: BotRow; enabled: bool
   }
 
   return (
-    <SettingsRow
-      icon={<BotAvatar image={bot.avatar} name={bot.label} size={32} shape={bot.shape} />}
-      label={bot.label}
-      keywords={`bot bots ${bot.name}`}
-      below={
-        <>
-          {!ready && !confirming && (
-            <div className="flex items-center gap-2 pb-1">
-              <InlineNote className="flex-1">Herald's tools are not set up in this bot yet, so it cannot do things on your Mac.</InlineNote>
-              <GlassButton size="sm" variant="ghost" onClick={() => setConfirming(true)} aria-label={`Prepare ${bot.label}`}>
-                Prepare
+    <Filterable label={bot.label} keywords={`bot bots ${bot.name}`}>
+      <div className="border-t border-line">
+        <div className="flex items-center gap-3.5 px-4 py-3">
+          <BotAvatar image={bot.avatar} name={bot.label} size={44} shape={bot.shape} />
+          <div className="min-w-0 flex-1">
+            <div className="text-[13.5px] font-semibold text-fg">{bot.label}</div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {state === null ? (
+              <Pill tone="muted">…</Pill>
+            ) : ready ? (
+              <Pill tone="ok" dot>
+                Ready
+              </Pill>
+            ) : (
+              <Pill tone="warn" dot>
+                Needs setup
+              </Pill>
+            )}
+            <Toggle checked={enabled} onChange={onToggle} label={`Show ${bot.label} in Herald`} />
+          </div>
+        </div>
+        {!ready && !confirming && (
+          <div className="flex items-center gap-2 px-4 pb-3">
+            <InlineNote className="flex-1">Herald's tools are not set up in this bot yet, so it cannot do things on your Mac.</InlineNote>
+            <GlassButton size="sm" variant="ghost" onClick={() => setConfirming(true)} aria-label={`Prepare ${bot.label}`}>
+              Prepare
+            </GlassButton>
+          </div>
+        )}
+        {confirming && (
+          <div className="flex flex-col gap-1.5 px-4 pb-3">
+            <InlineNote tone="info">
+              Runs the same steps the setup runs for your default bot, each one in {bot.label}'s own profile and nothing global: links the bridge plugin beside it, enables the plugin, enables Herald's tools, turns Tool Search off for this bot.
+            </InlineNote>
+            <div className="flex items-center gap-2">
+              <GlassButton size="sm" variant="ghost" onClick={() => setConfirming(false)}>
+                Cancel
+              </GlassButton>
+              <GlassButton size="sm" variant="primary" disabled={busy} onClick={() => void prepare()} aria-label={`Confirm preparing ${bot.label}`}>
+                Prepare {bot.label}
               </GlassButton>
             </div>
-          )}
-          {confirming && (
-            <div className="flex flex-col gap-1.5 pb-1">
-              <InlineNote tone="info">
-                Runs the same steps the setup runs for your default bot, each one in {bot.label}'s own profile and nothing global: links the bridge plugin beside it, enables the plugin, enables Herald's tools, turns Tool Search off for this bot.
-              </InlineNote>
-              <div className="flex items-center gap-2">
-                <GlassButton size="sm" variant="ghost" onClick={() => setConfirming(false)}>
-                  Cancel
-                </GlassButton>
-                <GlassButton size="sm" variant="primary" disabled={busy} onClick={() => void prepare()} aria-label={`Confirm preparing ${bot.label}`}>
-                  Prepare {bot.label}
-                </GlassButton>
+          </div>
+        )}
+        {report && (
+          <div className="flex flex-col gap-0.5 px-4 pb-3">
+            {report.steps.map(step => (
+              <div key={step.label} className="text-[12px] leading-snug">
+                <span className={step.ok ? 'text-fg-2' : 'text-danger'}>{step.ok ? '✓' : '✗'}</span> <span className="text-fg-2">{step.label}</span>
+                {step.detail && <span className="text-fg-4"> — {step.detail}</span>}
               </div>
-            </div>
-          )}
-          {report && (
-            <div className="flex flex-col gap-0.5 pb-1">
-              {report.steps.map(step => (
-                <div key={step.label} className="text-[12px] leading-snug">
-                  <span className={step.ok ? 'text-fg-2' : 'text-danger'}>{step.ok ? '✓' : '✗'}</span> <span className="text-fg-2">{step.label}</span>
-                  {step.detail && <span className="text-fg-4"> — {step.detail}</span>}
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      }
-    >
-      {state === null ? (
-        <Pill tone="muted">…</Pill>
-      ) : ready ? (
-        <Pill tone="ok" dot>
-          Ready
-        </Pill>
-      ) : (
-        <Pill tone="warn" dot>
-          Needs setup
-        </Pill>
-      )}
-      <Toggle checked={enabled} onChange={onToggle} label={`Show ${bot.label} in Herald`} />
-    </SettingsRow>
+            ))}
+          </div>
+        )}
+      </div>
+    </Filterable>
   )
 }
