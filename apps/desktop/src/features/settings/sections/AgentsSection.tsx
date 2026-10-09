@@ -14,6 +14,7 @@ import { $hermesAuth, loginTarget, refreshHermesAuth, requestHermesLogin } from 
 import { notify } from '../../../store/notifications.ts'
 import { readTier, withTier } from './policy.ts'
 import { errorText, InlineNote, markSaved, MenuDropdown, RadioCard, SectionTitle, SettingsBlock, SettingsGroup, SettingsRow, Stepper, useDismiss } from './shared.tsx'
+import { BotsBlock } from './BotsBlock.tsx'
 import { ToolSearchRow } from './ToolSearchRow.tsx'
 
 /*
@@ -48,6 +49,8 @@ export function AgentsSection() {
           </div>
         </GlassCard>
       </SettingsBlock>
+
+      <BotsBlock />
 
       <AutonomyBlock ready={ready} />
 

@@ -1,6 +1,8 @@
+import { $prefs, updatePrefs } from '../store/backend.ts'
 import { $botOptions, matchBot, refreshBots } from '../store/bots.ts'
 import { createChat } from '../store/chat.ts'
 import { fail, ok, type OsCommand } from '../store/os-commands.ts'
+import { refreshSessions } from '../store/sessions.ts'
 import { showPage } from '../store/windows.ts'
 
 /* The person's bots: which one a conversation runs as. */
@@ -31,6 +33,43 @@ export const botCommands: readonly OsCommand[] = [
       showPage('hermes')
 
       return ok(`Talking with ${match.label}`, { page: 'hermes', data: { sessionId: chat.sessionId, bot: match.name } })
+    }
+  },
+  {
+    id: 'bots.enabled.set',
+    title: 'Show or hide a bot in Herald',
+    description: 'Which bots appear in the session list and the New session menu.',
+    tier: 'mutate',
+    args: [
+      { name: 'bot', type: 'string', description: 'The bot, by name or title', required: true },
+      { name: 'show', type: 'boolean', description: 'true to show it in Herald, false to hide it' }
+    ],
+    phrases: [
+      ...['show {bot}', 'add {bot} to herald', 'put {bot} in herald'].map(phrase => ({ phrase, args: { show: true } })),
+      ...['hide {bot}', 'remove {bot} from herald'].map(phrase => ({ phrase, args: { show: false } }))
+    ],
+    run: async ({ bot, show }) => {
+      await refreshBots()
+      const options = $botOptions.get()
+      const { match, candidates } = matchBot(options, String(bot))
+
+      if (!match) {
+        return candidates.length > 1
+          ? fail(`Which bot? ${candidates.map(option => option.label).slice(0, 5).join(', ')}`, { items: candidates.map(option => option.label) })
+          : fail(`No bot called "${String(bot)}".`, { items: options.map(option => option.label) })
+      }
+
+      if (!match.name) {
+        return fail('Hermes itself always stays in Herald.')
+      }
+
+      const prefs = $prefs.get()
+      const current = prefs.bots.enabled ?? []
+      const next = show === false ? current.filter(name => name !== match.name) : [...new Set([...current, match.name])]
+      await updatePrefs({ bots: { enabled: next, last: prefs.bots.last } })
+      void refreshSessions()
+
+      return ok(show === false ? `${match.label} is hidden from Herald.` : `${match.label} shows up in Herald now.`, { data: { bot: match.name, enabled: next } })
     }
   },
   {
