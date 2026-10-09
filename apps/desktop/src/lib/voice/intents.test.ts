@@ -29,7 +29,7 @@ const commands: CommandSummary[] = [
     ],
     phrases: [{ phrase: 'create a website for {goal}', args: { prefix: 'a website for' } }, { phrase: 'build me an app that {goal}', args: { prefix: 'an app that' } }, 'build me {goal}']
   },
-  { id: 'bots.use', title: 'Talk to a bot', description: '', tier: 'act', hidden: false, args: [{ name: 'bot', type: 'string', description: '', required: true }], phrases: ['talk to {bot}', 'parla con {bot}', 'fammi parlare con {bot}', 'vorrei parlare con {bot}'] },
+  { id: 'bots.use', title: 'Talk to a bot', description: '', tier: 'act', hidden: false, args: [{ name: 'bot', type: 'string', description: '', required: true }], phrases: ['talk to {bot}', 'parla con {bot}', 'fammi parlare con {bot}', 'vorrei parlare con {bot}', { phrase: 'talk to', args: { bot: 'Hermes' } }, { phrase: 'parla con', args: { bot: 'Hermes' } }, { phrase: 'fammi parlare con', args: { bot: 'Hermes' } }] },
   { id: 'bots.enabled.set', title: 'Show or hide a bot in Herald', description: '', tier: 'mutate', hidden: false, args: [{ name: 'bot', type: 'string', description: '', required: true }, { name: 'show', type: 'boolean', description: '' }], phrases: [...['show {bot}', 'mostra {bot}'].map(phrase => ({ phrase, args: { show: true } })), ...['nascondi {bot}'].map(phrase => ({ phrase, args: { show: false } }))] },
   { id: 'bots.list', title: 'List your bots', description: '', tier: 'read', hidden: false, args: [], phrases: ['list my bots', 'elenca i bot', 'quali bot ho', 'che bot ho'] },
   { id: 'studio.open', title: 'Show the Studio', description: '', tier: 'read', hidden: false, args: [], phrases: ['show me the code', 'show me what youre doing', 'show me'] },
@@ -308,5 +308,12 @@ describe('the bot commands speak Italian too', () => {
     expect(route('nascondi Alfred.')).toMatchObject({ command: 'bots.enabled.set', args: { bot: 'Alfred', show: false } })
     expect(route('elenca i bot')).toMatchObject({ command: 'bots.list' })
     expect(route('quali bot ho')).toMatchObject({ command: 'bots.list' })
+  })
+
+  it('talking to the default bot works: the lead-in left by the addressed-name trailer is Hermes itself', () => {
+    expect(route('Parla con Hermes.')).toMatchObject({ command: 'bots.use', args: { bot: 'Hermes' } })
+    expect(route('talk to hermes')).toMatchObject({ command: 'bots.use', args: { bot: 'Hermes' } })
+    expect(route('fammi parlare con hermes per favore')).toMatchObject({ command: 'bots.use', args: { bot: 'Hermes' } })
+    expect(route('open the terminal, hermes')).toMatchObject({ command: 'open.any', args: { name: 'terminal' } })
   })
 })
