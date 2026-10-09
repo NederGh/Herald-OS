@@ -196,8 +196,10 @@ const skipped = (relative: string): boolean => relative.split(path.sep).some(par
 /** Project folders must be real directories inside the home folder. */
 async function projectRoot(target: string): Promise<string> {
   const root = normalizeUserPath(target)
+  const home = os.homedir()
 
-  if (!root.startsWith(os.homedir() + path.sep) && !root.startsWith('/tmp/') && !root.startsWith('/private/tmp/')) {
+  // The home folder itself counts as inside: a chat with no project is given it as its working directory.
+  if (!(root === home || root.startsWith(home + path.sep)) && !root.startsWith('/tmp/') && !root.startsWith('/private/tmp/')) {
     throw new Error('project folders must be inside your home folder')
   }
 
