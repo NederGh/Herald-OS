@@ -9,9 +9,9 @@ export interface LiveStatus {
   voice: string
 }
 
-export async function fetchLiveStatus(): Promise<LiveStatus> {
+export async function fetchLiveStatus(profile: string | null = null): Promise<LiveStatus> {
   try {
-    const raw = await rest.get<Partial<LiveStatus> & { ok?: boolean }>('/api/audio/voice-live/status')
+    const raw = await rest.get<Partial<LiveStatus> & { ok?: boolean }>('/api/audio/voice-live/status', profile ? { profile } : undefined)
 
     return {
       mode: raw.mode === 'gpt-live' ? 'gpt-live' : 'chained',

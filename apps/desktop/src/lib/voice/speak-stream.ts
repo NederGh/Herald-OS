@@ -49,7 +49,7 @@ export class SpeakStream {
   private gain: GainNode | null = null
   private readonly ready: Promise<void>
 
-  constructor(private readonly handlers: SpeakStreamHandlers = {}) {
+  constructor(private readonly handlers: SpeakStreamHandlers = {}, private readonly profile: string | null = null) {
     this.ready = this.open()
   }
 
@@ -58,6 +58,11 @@ export class SpeakStream {
 
     try {
       url = await window.heraldOS.voice.audioWsUrl('speak-stream')
+
+      if (this.profile) {
+        // The reply speaks with the bot's own voice: the synthesis chain resolves from that profile.
+        url += `${url.includes('?') ? '&' : '?'}profile=${encodeURIComponent(this.profile)}`
+      }
     } catch (error) {
       this.finish('error', error instanceof Error ? error.message : String(error))
 
@@ -277,14 +282,14 @@ let fallbackAudio: HTMLAudioElement | null = null
  * Whole-utterance TTS through `POST /api/audio/speak` (providers without a chunked API, and short
  * announcements). Resolves when playback ends; rejects when synthesis fails.
  */
-export async function speakOnce(text: string, signal?: { stopped: boolean }): Promise<void> {
+export async function speakOnce(text: string, signal?: { stopped: boolean }, profile: string | null = null): Promise<void> {
   const trimmed = text.trim()
 
   if (!trimmed) {
     return
   }
 
-  const result = await rest.post<{ ok: boolean; data_url?: string }>('/api/audio/speak', { text: trimmed })
+  const result = await rest.post<{ ok: boolean; data_url?: string }>('/api/audio/speak', { text: trimmed }, profile ? { profile } : undefined)
 
   if (!result?.data_url || signal?.stopped) {
     return

@@ -15,6 +15,7 @@ function fakeHost(answer: (text: string) => 'approve' | 'deny' | null, cardWaiti
   const calls = { interrupts: 0, intents: [] as string[], answers: [] as string[], captions: [] as unknown[] }
   const host: VoiceHost = {
     prefs: () => ({ followUpSeconds: 8 }) as ReturnType<VoiceHost['prefs']>,
+    bot: () => null,
     setState: () => undefined,
     setCaptions: patch => void calls.captions.push(patch),
     submit: async () => null,

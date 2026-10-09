@@ -75,6 +75,8 @@ export function describeTurnError(error: string | undefined): TurnErrorDescripti
 /** What an engine may ask of the shell. */
 export interface VoiceHost {
   prefs(): VoicePrefs
+  /** The bot (its profile name) this conversation's spoken replies belong to; null is the default bot. */
+  bot(): string | null
   setState(state: VoiceState): void
   setCaptions(patch: Partial<VoiceCaptions>): void
   /** Submit a spoken utterance as a Hermes turn; resolves with the session id or null when empty. */

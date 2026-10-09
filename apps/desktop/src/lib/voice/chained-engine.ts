@@ -386,7 +386,7 @@ export class ChainedEngine implements ConversationEngine {
   private speakWithFallback(text: string, signal: { stopped: boolean }): Promise<void> {
     return withProviderFallback(
       'tts',
-      () => speakOnce(text, signal),
+      () => speakOnce(text, signal, this.host.bot()),
       (from, to) => this.host.notify('Text to speech switched', `${from ?? 'The configured provider'} is not set up; using the free ${to} voice. Change it in Settings > Voice.`, 'info')
     )
   }
@@ -443,7 +443,7 @@ export class ChainedEngine implements ConversationEngine {
 
         this.maybeFinishTurn()
       }
-    })
+    }, this.host.bot())
     this.speak = speak
     this.mode = 'monitor'
     this.endpointer = new Endpointer(BARGE_IN_ENDPOINTER)

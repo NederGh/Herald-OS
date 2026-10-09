@@ -162,6 +162,14 @@ async function voiceSession(): Promise<string> {
   return active && $chats.get()[active] ? active : (await createChat()).sessionId
 }
 
+/** The bot the spoken replies belong to: the conversation under the voice, else the last one a chat ran as. */
+function voiceBot(): string | null {
+  const sid = $voiceSessionId.get() ?? $activeChatId.get()
+  const chat = sid ? $chats.get()[sid] : undefined
+
+  return chat?.bot ?? $prefs.get().bots.last ?? null
+}
+
 /** Wait for the turn still running in a session to end, for a while; true when it is still running. */
 async function settle(sessionId: string): Promise<boolean> {
   const until = Date.now() + SETTLE_MS
@@ -322,6 +330,7 @@ export async function runVoiceIntent(text: string): Promise<{ handled: boolean; 
 
 const host: VoiceHost = {
   prefs: () => $prefs.get().voice,
+  bot: voiceBot,
   setState: state => patch({ state }),
   setCaptions: captions => patch({ captions: { ...$voice.get().captions, ...captions } }),
   // The Office and screen lines ride with the spoken context (model input only), so "this folder",
@@ -405,7 +414,7 @@ export async function resolveEngine(prefs: VoicePrefs = $prefs.get().voice): Pro
     return { engine: 'chained', fallbackReason: `Live daily cap of ${prefs.liveDailyCapMinutes} min reached; using the free engine.` }
   }
 
-  const status = await fetchLiveStatus()
+  const status = await fetchLiveStatus(voiceBot())
   patch({ live: { ...$voice.get().live, status } })
 
   if (!status.available) {
@@ -549,7 +558,7 @@ export function setLiveSessionSeconds(seconds: number): void {
 export function speakWithFreeFallback(text: string, signal?: { stopped: boolean }): Promise<void> {
   return withProviderFallback(
     'tts',
-    () => speakOnce(text, signal),
+    () => speakOnce(text, signal, voiceBot()),
     (from, to) => notify({ title: 'Text to speech switched', body: `${from ?? 'The configured provider'} is not set up; using the free ${to} voice. Change it in Settings > Voice.`, level: 'info' })
   )
 }

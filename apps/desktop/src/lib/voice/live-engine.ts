@@ -225,9 +225,11 @@ export class LiveEngine implements ConversationEngine {
     }
 
     let response: { ok?: boolean; session?: { id: string }; transport?: { sdp: string; type: string } }
+    // The live conversation runs in the bot's own profile when one is chosen; the key stays on the backend.
+    const profile = this.host.bot()
 
     try {
-      response = await rest.post('/api/audio/voice-live/session', { sdp, history: this.seedHistory() })
+      response = await rest.post('/api/audio/voice-live/session', { sdp, history: this.seedHistory() }, profile ? { profile } : undefined)
     } catch (error) {
       connection.close()
       this.peer = null
