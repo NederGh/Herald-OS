@@ -29,6 +29,7 @@ const commands: CommandSummary[] = [
     ],
     phrases: [{ phrase: 'create a website for {goal}', args: { prefix: 'a website for' } }, { phrase: 'build me an app that {goal}', args: { prefix: 'an app that' } }, 'build me {goal}']
   },
+  { id: 'bots.use', title: 'Talk to a bot', description: '', tier: 'act', hidden: false, args: [{ name: 'bot', type: 'string', description: '', required: true }], phrases: ['talk to {bot}', 'parla con {bot}', 'fammi parlare con {bot}', 'vorrei parlare con {bot}'] },
   { id: 'studio.open', title: 'Show the Studio', description: '', tier: 'read', hidden: false, args: [], phrases: ['show me the code', 'show me what youre doing', 'show me'] },
   { id: 'overlay.applications', title: 'Show all apps', description: '', tier: 'read', hidden: false, args: [], phrases: ['show applications', 'open apps', 'open my apps', 'show all apps'] },
   {
@@ -290,5 +291,16 @@ describe('Office requests', () => {
   it('still types what follows "type", word for word', () => {
     expect(route('type make this a table')).toMatchObject({ command: 'text.type', args: { text: 'make this a table' } })
     expect(route('Type add a total row.')).toMatchObject({ command: 'text.type', args: { text: 'add a total row.' } })
+  })
+})
+
+describe('the bot commands speak Italian too', () => {
+  const route = (text: string) => matchIntent(text, commands)
+
+  it('matches "parla con Alfred" and its variants, politeness aside', () => {
+    expect(route('Parla con Alfred.')).toMatchObject({ command: 'bots.use', args: { bot: 'Alfred' } })
+    expect(route('fammi parlare con alfred per favore')).toMatchObject({ command: 'bots.use', args: { bot: 'alfred' } })
+    expect(route('Vorrei parlare con Sally, grazie')).toMatchObject({ command: 'bots.use', args: { bot: 'Sally' } })
+    expect(route('talk to Alfred')).toMatchObject({ command: 'bots.use', args: { bot: 'Alfred' } })
   })
 })

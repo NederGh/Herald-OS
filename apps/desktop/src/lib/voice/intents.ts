@@ -23,7 +23,7 @@ const FILLERS = [
   /^(go ahead and|please go ahead and)\s+/i
 ]
 
-const TRAILERS = [/[,\s]+please$/i, /[,\s]+(for me|now|thanks|thank you)$/i, /[,\s]+hermes$/i]
+const TRAILERS = [/[,\s]+please$/i, /[,\s]+(for me|now|thanks|thank you)$/i, /[,\s]+hermes$/i, /[,\s]+(per favore|per piacere)$/i, /[,\s]+grazie$/i]
 
 /** Drop the wake word and leading politeness, keeping the user's casing and punctuation. */
 export function stripFillers(text: string): string {
