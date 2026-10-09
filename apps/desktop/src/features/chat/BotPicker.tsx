@@ -1,6 +1,6 @@
 import { useStore } from '@nanostores/react'
 import { cloneElement, isValidElement, useState, type ReactElement, type ReactNode } from 'react'
-import { BotAvatar } from '../../components/app-icon.tsx'
+import { BotAvatar, HermesAvatar } from '../../components/app-icon.tsx'
 import { Dot } from '../../components/ui/primitives.tsx'
 import { $botOptions, refreshBots } from '../../store/bots.ts'
 import { MenuItem, PopMenu } from '../hermes/Menu.tsx'
@@ -23,7 +23,7 @@ export function BotPicker({ onPick, align = 'right', children }: { onPick: (bot:
       {options.map(option => (
         <MenuItem
           key={option.name ?? 'default'}
-          icon={option.avatar ? <BotAvatar image={option.avatar} name={option.label} size={20} shape={option.shape} /> : <Dot tone="accent" />}
+          icon={option.name === null ? <HermesAvatar size={20} rounded={5} /> : option.avatar ? <BotAvatar image={option.avatar} name={option.label} size={20} shape={option.shape} /> : <Dot tone="accent" />}
           onClick={() => {
             setOpen(false)
             onPick(option.name)
