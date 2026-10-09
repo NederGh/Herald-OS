@@ -11,6 +11,7 @@ import { docsCommands } from './docs.ts'
 import { editCommands } from './edit.ts'
 import { filesCommands } from './files.ts'
 import { hermesCommands } from './hermes.ts'
+import { withItalianPhrases } from './italian.ts'
 import { memoryCommands } from './memory.ts'
 import { navigationCommands } from './navigation.ts'
 import { officeCommands } from './office.ts'
@@ -29,7 +30,7 @@ import { softwareCommands } from './software.ts'
 import { typingCommands } from './typing.ts'
 
 /** Every command group by file, in the order they register. A group file registers once it is listed here. */
-export const commandGroups: Record<string, readonly OsCommand[]> = {
+export const commandGroups: Record<string, readonly OsCommand[]> = withItalianPhrases({
   navigation: navigationCommands,
   edit: editCommands,
   hermes: hermesCommands,
@@ -58,7 +59,7 @@ export const commandGroups: Record<string, readonly OsCommand[]> = {
   docs: docsCommands,
   sheets: sheetsCommands,
   slides: slidesCommands
-}
+})
 
 let registered = false
 
