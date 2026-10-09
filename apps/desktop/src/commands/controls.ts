@@ -204,7 +204,7 @@ export const controlCommands: readonly OsCommand[] = [
     description: 'Pick the microphone the voice listens through, by name. On Herald OS Linux this sets the machine default; elsewhere it applies to Herald only.',
     tier: 'act',
     args: [{ name: 'device', type: 'string', description: 'Part of the device name, or automatic', required: true }],
-    phrases: ['use the {device} microphone', 'switch the microphone to {device}', 'listen through the {device}', { phrase: 'use the automatic microphone', args: { device: 'automatic' } }],
+    phrases: ['use the {device} microphone', 'switch the microphone to {device}', 'listen through the {device}', { phrase: 'use the automatic microphone', args: { device: 'automatic' } }, 'usa il microfono {device}', 'passa al microfono {device}', 'ascolta dal {device}', { phrase: 'usa il microfono automatico', args: { device: 'automatic' } }],
     run: async ({ device }) => {
       const name = String(device)
 
@@ -247,7 +247,7 @@ export const controlCommands: readonly OsCommand[] = [
     description: 'Say which microphone the voice listens through, and why that one.',
     tier: 'read',
     args: [],
-    phrases: ['which microphone am i using', 'what microphone is herald using', 'microphone status'],
+    phrases: ['which microphone am i using', 'what microphone is herald using', 'microphone status', 'quale microfono sto usando', 'che microfono usa herald', 'stato del microfono'],
     run: async () => {
       if (ownsSystemAudio()) {
         const { audio } = await status('audio')
