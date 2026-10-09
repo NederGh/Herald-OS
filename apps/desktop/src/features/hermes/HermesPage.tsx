@@ -2,11 +2,13 @@ import { useStore } from '@nanostores/react'
 import { IconArrowUpRight, IconHistory, IconPencil, IconPlus, IconTrash, IconX } from '@tabler/icons-react'
 import { useEffect, useRef, useState } from 'react'
 import { GlassButton, GlassCard, MoreButton } from '../../components/ui/glass.tsx'
+import { $botOptions, refreshBots } from '../../store/bots.ts'
 import { $activeChat, $activeChatId, $chats, createChat, forgetChat } from '../../store/chat.ts'
 import { $connection } from '../../store/gateway.ts'
 import { notify } from '../../store/notifications.ts'
 import { deleteSession } from '../../store/sessions.ts'
 import { openApp } from '../../store/windows.ts'
+import { BotPicker } from '../chat/BotPicker.tsx'
 import { SessionList } from '../chat/SessionList.tsx'
 import { ArtifactPane } from './ArtifactPane.tsx'
 import { Conversation } from './Conversation.tsx'
@@ -21,6 +23,7 @@ export function HermesPage() {
   const activeId = useStore($activeChatId)
   const connection = useStore($connection)
   const online = connection === 'open'
+  const botOptions = useStore($botOptions)
   const [menuOpen, setMenuOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -28,6 +31,11 @@ export function HermesPage() {
   const [title, setTitle] = useState('')
   const [busy, setBusy] = useState(false)
   const renameInput = useRef<HTMLInputElement>(null)
+
+  // The picker needs the roster; read it once the page is on screen.
+  useEffect(() => {
+    void refreshBots()
+  }, [])
 
   // Picking a session from the drawer closes it.
   useEffect(() => {
@@ -108,10 +116,19 @@ export function HermesPage() {
             className="glass-input h-9 w-72 rounded-lg px-3 text-[13px] outline-none placeholder:text-fg-4 animate-pop"
           />
         )}
-        <GlassButton onClick={() => void createChat()} disabled={!online} aria-label="New conversation">
-          <IconPlus />
-          New conversation
-        </GlassButton>
+        {botOptions.length > 1 ? (
+          <BotPicker onPick={bot => void createChat({ bot })}>
+            <GlassButton disabled={!online} aria-label="New conversation, choose a bot" aria-haspopup="menu">
+              <IconPlus />
+              New conversation
+            </GlassButton>
+          </BotPicker>
+        ) : (
+          <GlassButton onClick={() => void createChat()} disabled={!online} aria-label="New conversation">
+            <IconPlus />
+            New conversation
+          </GlassButton>
+        )}
         <PopMenu open={menuOpen} onClose={() => setMenuOpen(false)} trigger={<MoreButton aria-label="Conversation actions" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)} />}>
           <MenuItem icon={<IconPencil />} disabled={!chat} onClick={startRename}>
             Rename
