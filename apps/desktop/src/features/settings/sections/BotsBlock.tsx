@@ -4,7 +4,7 @@ import type { BotBridgeState, BotsPrepareResult } from '../../../../shared/ipc.t
 import { BotAvatar } from '../../../components/app-icon.tsx'
 import { GlassButton, Pill, Toggle } from '../../../components/ui/glass.tsx'
 import { $prefs, updatePrefs } from '../../../store/backend.ts'
-import { $roster, type BotRow, refreshBots } from '../../../store/bots.ts'
+import { $roster, type BotRow, botReady, refreshBots } from '../../../store/bots.ts'
 import { notify } from '../../../store/notifications.ts'
 import { refreshSessions } from '../../../store/sessions.ts'
 import { errorText, Filterable, InlineNote, markSaved } from './shared.tsx'
@@ -68,7 +68,7 @@ function BotSettingsRow({ bot, enabled, onToggle }: { bot: BotRow; enabled: bool
     read()
   }, [bot.name])
 
-  const ready = Boolean(state && !state.error && state.linked && state.pluginEnabled && state.toolsEnabled)
+  const ready = botReady(state)
 
   const prepare = async () => {
     setBusy(true)
@@ -106,12 +106,12 @@ function BotSettingsRow({ bot, enabled, onToggle }: { bot: BotRow; enabled: bool
                 Needs setup
               </Pill>
             )}
-            <Toggle checked={enabled} onChange={onToggle} label={`Show ${bot.label} in Herald`} />
+            <Toggle checked={enabled} onChange={onToggle} disabled={!ready && !enabled} label={`Show ${bot.label} in Herald`} />
           </div>
         </div>
         {!ready && !confirming && (
           <div className="flex items-center gap-2 px-4 pb-3">
-            <InlineNote className="flex-1">Herald's tools are not set up in this bot yet, so it cannot do things on your Mac.</InlineNote>
+            <InlineNote className="flex-1">Herald's tools are not set up in this bot yet, so it cannot do things on your Mac. Prepare it to bring it into Herald.</InlineNote>
             <GlassButton size="sm" variant="ghost" onClick={() => setConfirming(true)} aria-label={`Prepare ${bot.label}`}>
               Prepare
             </GlassButton>

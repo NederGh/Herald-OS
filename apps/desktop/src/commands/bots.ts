@@ -1,5 +1,5 @@
 import { $prefs, updatePrefs } from '../store/backend.ts'
-import { $botOptions, matchBot, refreshBots } from '../store/bots.ts'
+import { $botOptions, botReady, matchBot, refreshBots } from '../store/bots.ts'
 import { createChat } from '../store/chat.ts'
 import { fail, ok, type OsCommand } from '../store/os-commands.ts'
 import { refreshSessions } from '../store/sessions.ts'
@@ -61,6 +61,14 @@ export const botCommands: readonly OsCommand[] = [
 
       if (!match.name) {
         return fail('Hermes itself always stays in Herald.')
+      }
+
+      if (show !== false) {
+        const state = await window.heraldOS.bots.bridgeState(match.name).catch(() => null)
+
+        if (!botReady(state)) {
+          return fail(`${match.label} needs setup first: prepare it in Settings, under Hermes & agents.`)
+        }
       }
 
       const prefs = $prefs.get()
