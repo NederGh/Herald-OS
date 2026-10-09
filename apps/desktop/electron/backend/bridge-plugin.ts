@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
-import type { BackendRuntime } from '../../shared/ipc.ts'
+import type { BackendRuntime, BridgeStep } from '../../shared/ipc.ts'
 import { log } from '../log.ts'
 import { hermesHome, heraldOsDataDir } from '../paths.ts'
 
@@ -61,7 +61,7 @@ interface HermesResult {
 const HERMES_ERROR = /^\s*✗/m
 const ANSI = /\u001b\[[0-9;]*m/g
 
-function hermes(runtime: BackendRuntime, args: string[]): Promise<HermesResult> {
+export function runHermes(runtime: BackendRuntime, args: string[]): Promise<HermesResult> {
   const [command, ...head] = runtime.command
 
   return new Promise(resolve => {
@@ -101,7 +101,7 @@ export function failureReason(output: string): string {
 /** One step, logged with what it changes; the error for the shell when it fails. */
 async function step(runtime: BackendRuntime, args: string[], change: string): Promise<string | null> {
   log('bridge', `hermes ${args.join(' ')}: ${change}`)
-  const result = await hermes(runtime, args)
+  const result = await runHermes(runtime, args)
 
   return result.ok ? null : `hermes ${args.join(' ')} failed: ${failureReason(result.output)}`
 }
@@ -164,9 +164,98 @@ export async function ensureBridgePlugin(runtime: BackendRuntime, resources: str
   return null
 }
 
+/**
+ * The guided preparation of the bridge in one bot: the same declared steps the setup runs for the
+ * default profile — link, enable the plugin, enable its tools, Tool Search off — every one with
+ * `-p <profile>` and none global. Stops at the first failed step and returns the step log for the
+ * settings to show. Runs only when the person asks for it (the Prepare button).
+ */
+export async function prepareBotBridge(runtime: BackendRuntime, name: string, resources: string = process.resourcesPath): Promise<{ ok: boolean; steps: BridgeStep[] }> {
+  const steps: BridgeStep[] = []
+  const stop = (label: string, detail: string) => {
+    steps.push({ label, ok: false, detail })
+
+    return { ok: false, steps }
+  }
+
+  // The plugin to link: beside a packaged app, or in the checkout Herald OS runs from.
+  const has = (dir: string) => Boolean(dir) && fs.existsSync(path.join(dir, 'plugin.yaml'))
+  const bundled = resources ? path.join(resources, 'herald-os-bridge') : ''
+  const checkout = runtime.root ? path.join(runtime.root, 'plugins', 'herald-os-bridge') : ''
+  const source = has(bundled) ? bundled : has(checkout) ? checkout : ''
+
+  if (!source) {
+    return stop('Find the plugin to link', 'no herald-os-bridge plugin beside the app or in the runtime checkout')
+  }
+
+  const link = path.join(hermesHome(), 'profiles', name, 'plugins', 'herald-os-bridge')
+
+  try {
+    const plan = bridgeLinkPlan(readEntry(link), source)
+
+    if (plan === 'keep') {
+      steps.push({ label: `The plugin is already linked beside the ${name} profile`, ok: true })
+    } else {
+      fs.mkdirSync(path.dirname(link), { recursive: true })
+      fs.rmSync(link, { force: true })
+      fs.symlinkSync(source, link)
+      steps.push({ label: `Linked herald-os-bridge beside the ${name} profile`, ok: true })
+    }
+  } catch (error) {
+    return stop('Link the plugin', `could not link ${link}: ${error instanceof Error ? error.message : String(error)}`)
+  }
+
+  const enabled = await step(runtime, ['-p', name, 'plugins', 'enable', 'herald-os-bridge'], `adds it to plugins.enabled in the ${name} profile's config.yaml`)
+
+  if (enabled) {
+    return stop(`Enable the plugin in ${name}`, enabled)
+  }
+
+  steps.push({ label: `Enabled herald-os-bridge in the ${name} profile`, ok: true })
+
+  const tools = await step(runtime, ['-p', name, 'tools', 'enable', 'herald_os'], `saves platform_toolsets.cli with herald_os in it for ${name}`)
+
+  if (tools) {
+    return stop(`Enable Herald's tools in ${name}`, tools)
+  }
+
+  steps.push({ label: `Enabled Herald's tools in the ${name} profile`, ok: true })
+
+  // Tool Search off for this bot too, with its own value written down once so it can be put back.
+  const current = await runHermes(runtime, ['-p', name, 'config', 'get', TOOL_SEARCH])
+  const before = current.stdout.trim().split('\n').pop()?.trim()
+
+  if (!current.ok || !before) {
+    return stop(`Read Tool Search in ${name}`, `hermes config get ${TOOL_SEARCH} failed: ${failureReason(current.output)}`)
+  }
+
+  if (before === 'off') {
+    steps.push({ label: `Tool Search is already off in ${name}`, ok: true })
+
+    return { ok: true, steps }
+  }
+
+  const record = path.join(heraldOsDataDir(), `tool-search-before-${name}`)
+
+  if (!fs.existsSync(record)) {
+    fs.mkdirSync(path.dirname(record), { recursive: true })
+    fs.writeFileSync(record, `${before}\n`)
+  }
+
+  const off = await step(runtime, ['-p', name, 'config', 'set', TOOL_SEARCH, 'off'], `turns Tool Search off for ${name} (it was ${before}; saved in ${record})`)
+
+  if (off) {
+    return stop(`Turn Tool Search off in ${name}`, off)
+  }
+
+  steps.push({ label: `Turned Tool Search off in ${name}`, ok: true })
+
+  return { ok: true, steps }
+}
+
 /** Tool Search off, with the value it had first written down so it can be put back. */
 async function keepToolsDirect(runtime: BackendRuntime): Promise<string | null> {
-  const current = await hermes(runtime, ['config', 'get', TOOL_SEARCH])
+  const current = await runHermes(runtime, ['config', 'get', TOOL_SEARCH])
   const before = current.stdout.trim().split('\n').pop()?.trim()
 
   if (!current.ok || !before) {

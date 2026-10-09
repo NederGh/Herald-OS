@@ -3,6 +3,8 @@ import {
   type AudioWsKind,
   type AuditEntry,
   type BackendState,
+  type BotBridgeState,
+  type BotsPrepareResult,
   type CalendarResult,
   type CanvasChangedEvent,
   type CanvasFetched,
@@ -456,6 +458,10 @@ const api = {
     readPolicy: (): Promise<string> => ipcRenderer.invoke(IPC.bridgePolicyRead),
     writePolicy: (text: string): Promise<void> => ipcRenderer.invoke(IPC.bridgePolicyWrite, text),
     readAudit: (limit = 200): Promise<AuditEntry[]> => ipcRenderer.invoke(IPC.bridgeAuditRead, limit)
+  },
+  bots: {
+    bridgeState: (name: string): Promise<BotBridgeState> => ipcRenderer.invoke(IPC.botsBridgeState, name),
+    prepare: (name: string): Promise<BotsPrepareResult> => ipcRenderer.invoke(IPC.botsPrepare, name)
   },
   env: (): Promise<EnvInfo> => ipcRenderer.invoke(IPC.envInfo)
 }

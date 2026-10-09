@@ -11,6 +11,7 @@ import { runHooks } from './events/hooks.ts'
 import { run } from './platform/exec.ts'
 import { startEventSources } from './events/sources.ts'
 import { registerAppsIpc } from './ipc/apps.ts'
+import { registerBotsIpc } from './ipc/bots.ts'
 import { registerBridgeIpc } from './ipc/bridge.ts'
 import { registerCanvasIpc } from './canvas/ipc.ts'
 import { registerModelIpc } from './canvas/model-ipc.ts'
@@ -304,6 +305,7 @@ function registerCoreIpc(): void {
   emojiPanel?.register()
   registerTerminalIpc(() => mainWindow)
   registerVoiceIpc(backend)
+  registerBotsIpc(backend)
   // Desktop mode layers pages over the shell window; panels mode gives them compositor windows.
   const webViews = registerWebIpc(mode === 'desktop')
   registerEditIpc(() => webViews)

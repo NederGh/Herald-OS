@@ -445,6 +445,29 @@ export interface BotsPrefs {
   last: string | null
 }
 
+export interface BotBridgeState {
+  /** The plugin is linked beside the bot's profile, into a real target. */
+  linked: boolean
+  /** plugins.enabled in the bot's config.yaml carries herald-os-bridge. */
+  pluginEnabled: boolean
+  /** platform_toolsets.cli in the bot's config.yaml carries herald_os. */
+  toolsEnabled: boolean
+  /** Why the state could not be read, when it could not. */
+  error?: string
+}
+
+/** One step of the guided bridge preparation, as the settings show it. */
+export interface BridgeStep {
+  label: string
+  ok: boolean
+  detail?: string
+}
+
+export interface BotsPrepareResult {
+  ok: boolean
+  steps: BridgeStep[]
+}
+
 export interface VoicePrefs {
   /** Master switch: when off, no microphone is ever opened and the orb stays hidden. */
   enabled: boolean
@@ -886,6 +909,8 @@ export const IPC = {
   bridgePolicyRead: 'herald-os:bridge:policy-read',
   bridgePolicyWrite: 'herald-os:bridge:policy-write',
   bridgeAuditRead: 'herald-os:bridge:audit-read',
+  botsBridgeState: 'herald-os:bots:bridge-state',
+  botsPrepare: 'herald-os:bots:prepare',
 
   envInfo: 'herald-os:env:info',
 

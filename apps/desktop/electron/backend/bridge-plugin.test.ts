@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { bridgeLinkPlan, ensureBridgePlugin, failureReason } from './bridge-plugin.ts'
+import { bridgeLinkPlan, ensureBridgePlugin, failureReason, prepareBotBridge } from './bridge-plugin.ts'
 
 const bundled = '/Applications/Herald OS.app/Contents/Resources/herald-os-bridge'
 
@@ -114,5 +114,67 @@ describe('ensureBridgePlugin', () => {
     process.env.HERMES_HOME = path.join(root, 'hermes')
     expect(await ensureBridgePlugin({ kind: 'path', label: 'test', command: ['false'] }, path.join(root, 'none'))).toBeNull()
     expect(fs.existsSync(path.join(root, 'hermes', 'plugins'))).toBe(false)
+  })
+})
+
+describe('prepareBotBridge', () => {
+  const saved = process.env.HERMES_HOME
+  let root = ''
+
+  afterEach(() => {
+    process.env.HERMES_HOME = saved
+    fs.rmSync(root, { recursive: true, force: true })
+  })
+
+  /** A checkout carrying the plugin, a Hermes home, and a `hermes` that logs its arguments and answers `config get`. */
+  function setUp(script = '', toolSearch = 'auto') {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'botbridge-'))
+    const checkout = path.join(root, 'Herald-OS')
+    fs.mkdirSync(path.join(checkout, 'plugins', 'herald-os-bridge'), { recursive: true })
+    fs.writeFileSync(path.join(checkout, 'plugins', 'herald-os-bridge', 'plugin.yaml'), 'name: herald-os-bridge\n')
+    process.env.HERMES_HOME = path.join(root, 'hermes')
+    const calls = path.join(root, 'calls.txt')
+    const body = `echo "$*" >> '${calls}'; case "$*" in *"config get"*) echo '${toolSearch}';; esac; ${script} exit 0`
+    const runtime = { kind: 'managed' as const, label: 'test', root: checkout, command: ['/bin/sh', '-c', body, 'hermes'] }
+
+    return { runtime, calls: () => fs.readFileSync(calls, 'utf8').trim().split('\n') }
+  }
+
+  it('links the plugin beside the bot and runs every step with the profile flag', async () => {
+    const { runtime, calls } = setUp()
+
+    const report = await prepareBotBridge(runtime, 'alfred')
+
+    expect(report.ok).toBe(true)
+    expect(report.steps.every(step => step.ok)).toBe(true)
+    const link = path.join(root, 'hermes', 'profiles', 'alfred', 'plugins', 'herald-os-bridge')
+    expect(fs.readlinkSync(link)).toBe(path.join(root, 'Herald-OS', 'plugins', 'herald-os-bridge'))
+    expect(calls()).toEqual([
+      '-p alfred plugins enable herald-os-bridge',
+      '-p alfred tools enable herald_os',
+      '-p alfred config get tools.tool_search.enabled',
+      '-p alfred config set tools.tool_search.enabled off'
+    ])
+    expect(fs.readFileSync(path.join(root, 'hermes', 'herald-os', 'tool-search-before-alfred'), 'utf8')).toBe('auto\n')
+  })
+
+  it('stops at the first failed step and says why', async () => {
+    const { runtime, calls } = setUp('exit 1;')
+
+    const report = await prepareBotBridge(runtime, 'alfred')
+
+    expect(report.ok).toBe(false)
+    expect(report.steps.map(step => step.ok)).toEqual([true, false])
+    expect(calls()).toEqual(['-p alfred plugins enable herald-os-bridge'])
+  })
+
+  it('leaves Tool Search alone when it is off already, and keeps the first value it found', async () => {
+    const { runtime, calls } = setUp('', 'off')
+
+    const report = await prepareBotBridge(runtime, 'alfred')
+
+    expect(report.ok).toBe(true)
+    expect(calls()).not.toContain('-p alfred config set tools.tool_search.enabled off')
+    expect(fs.existsSync(path.join(root, 'hermes', 'herald-os', 'tool-search-before-alfred'))).toBe(false)
   })
 })
