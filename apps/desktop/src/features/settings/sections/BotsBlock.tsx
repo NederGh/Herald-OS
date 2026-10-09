@@ -7,7 +7,7 @@ import { $prefs, updatePrefs } from '../../../store/backend.ts'
 import { $roster, type BotRow, refreshBots } from '../../../store/bots.ts'
 import { notify } from '../../../store/notifications.ts'
 import { refreshSessions } from '../../../store/sessions.ts'
-import { errorText, InlineNote, markSaved, SettingsBlock, SettingsRow } from './shared.tsx'
+import { errorText, InlineNote, markSaved, SettingsGroup, SettingsRow } from './shared.tsx'
 
 /*
  * Bots: the person's other Hermes bots. Which of them show up in Herald, and the guided
@@ -42,11 +42,11 @@ export function BotsBlock() {
   }
 
   return (
-    <SettingsBlock label="Bots" description="Your other Hermes bots: who shows up in Herald, and whether Herald's tools work inside them." keywords="bots bot profiles alfred mark sally">
+    <SettingsGroup title="Bots">
       {bots.map(bot => (
         <BotSettingsRow key={bot.name} bot={bot} enabled={(prefs.bots.enabled ?? []).includes(bot.name)} onToggle={on => toggle(bot.name, on)} />
       ))}
-    </SettingsBlock>
+    </SettingsGroup>
   )
 }
 
@@ -89,7 +89,7 @@ function BotSettingsRow({ bot, enabled, onToggle }: { bot: BotRow; enabled: bool
     <SettingsRow
       icon={<BotAvatar image={bot.avatar} name={bot.label} size={32} shape={bot.shape} />}
       label={bot.label}
-      keywords={`bot ${bot.name}`}
+      keywords={`bot bots ${bot.name}`}
       below={
         <>
           {!ready && !confirming && (
