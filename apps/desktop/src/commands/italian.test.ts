@@ -67,12 +67,28 @@ describe('Italian rides the voice fast path', () => {
     { id: 'voice.quiet', title: 'Stop talking', description: '', tier: 'read', hidden: true, args: [], phrases: ['be quiet', 'silenzio'] }
   ]
 
-  const match = (text: string) => matchIntent(text, commands)
+  const more: CommandSummary[] = [
+    { id: 'edit.undo', title: 'Undo', description: '', tier: 'act', hidden: false, args: [], phrases: ['undo', 'annulla', 'annulla la modifica'] },
+    { id: 'edit.copy', title: 'Copy', description: '', tier: 'act', hidden: false, args: [], phrases: ['copy', 'copia'] },
+    { id: 'plugin.manage', title: 'Plugins', description: '', tier: 'read', hidden: false, args: [], phrases: ['manage plugins', 'mostra i widget'] },
+    { id: 'slides.addSlide', title: 'New slide', description: '', tier: 'act', hidden: false, args: [], phrases: ['new slide', 'nuova diapositiva'] },
+    { id: 'view.scroll', title: 'Scroll', description: '', tier: 'act', hidden: false, args: [{ name: 'direction', type: 'string', description: '', required: true }], phrases: ['scroll down', { phrase: 'scorri giù', args: { direction: 'down' } }] }
+  ]
+
+  const match = (text: string) => matchIntent(text, [...commands, ...more])
 
   it('routes Italian opens with the Italian article kept for the resolver', () => {
     expect(match('apri la memoria')).toMatchObject({ command: 'open.any', args: { name: 'la memoria' } })
     expect(match('apri la pagina missioni')).toMatchObject({ command: 'page.open', args: { name: 'missioni' } })
     expect(match('mostrami le impostazioni')).toMatchObject({ command: 'open.any', args: { name: 'le impostazioni' } })
+  })
+
+  it('routes the new Italian maps: undo, widgets, slides, scrolling', () => {
+    expect(match('annulla')).toMatchObject({ command: 'edit.undo' })
+    expect(match('copia')).toMatchObject({ command: 'edit.copy' })
+    expect(match('mostra i widget')).toMatchObject({ command: 'plugin.manage' })
+    expect(match('nuova diapositiva')).toMatchObject({ command: 'slides.addSlide' })
+    expect(match('scorri giù')).toMatchObject({ command: 'view.scroll', args: { direction: 'down' } })
   })
 
   it('keeps destructive commands off the fast path, Italian included', () => {
