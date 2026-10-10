@@ -90,7 +90,7 @@ export const ITALIAN_PHRASES: Record<string, readonly CommandPhrase[]> = {
   // Chat and missions
   'chat.new': ['nuova chat', 'nuova conversazione', 'inizia una nuova chat', 'nuova sessione'],
   'chat.open': ['apri la conversazione su {title}', 'apri la sessione {title}', 'apri la chat su {title}'],
-  'chat.stop': ['ferma', 'fermati', 'interrompi', 'annulla', 'stop'],
+  'chat.stop': ['ferma', 'fermati', 'interrompi', 'stop'],
   'mission.start': ['avvia una missione per {goal}', 'nuova missione {goal}', 'crea una missione per {goal}'],
   'mission.compose': ['nuova missione', 'avvia una missione', 'crea una missione'],
   'mission.open': ['apri la missione {name}', 'mostra la missione {name}'],
@@ -115,7 +115,218 @@ export const ITALIAN_PHRASES: Record<string, readonly CommandPhrase[]> = {
   'voice.start': ['inizia ad ascoltare', 'parlami'],
   'voice.stop': ['basta ascoltare', 'chiudi la conversazione', 'arrivederci'],
   'voice.mute': ['muto', 'metti in muto', 'togli il muto'],
-  'voice.quiet': ['silenzio', 'smetti di parlare', 'basta parlare']
+  'voice.quiet': ['silenzio', 'smetti di parlare', 'basta parlare'],
+
+  // Automations
+  'automation.list': ['mostra le automazioni', 'elenca le automazioni', 'quali automazioni ho'],
+  'automation.show': ['apri lautomazione {name}', 'mostra lautomazione {name}'],
+  'automation.run': ['avvia lautomazione {name}', 'esegui lautomazione {name}', 'lancia lautomazione {name}'],
+  'automation.pause': ['metti in pausa lautomazione {name}', 'disattiva lautomazione {name}'],
+  'automation.resume': ['riattiva lautomazione {name}', 'riprendi lautomazione {name}'],
+  'automation.delete': ['elimina lautomazione {name}', 'cancella lautomazione {name}'],
+
+  // Canvas, capture, camera
+  'canvas.open': ['apri herald canvas', 'apri il canvas', 'apri leditor di immagini'],
+  'canvas.new': ['nuova tela', 'nuovo canvas', 'nuova immagine nella tela'],
+  'canvas.undo': ['annulla nella tela', 'annulla nel canvas'],
+  'capture.screenshot': [
+    'fai uno screenshot',
+    'cattura lo schermo',
+    { phrase: 'screenshot dello schermo intero', args: { mode: 'screen' } },
+    { phrase: 'screenshot di questa finestra', args: { mode: 'window' } }
+  ],
+  'capture.record': [
+    { phrase: 'registra lo schermo', args: { action: 'start' } },
+    { phrase: 'inizia a registrare lo schermo', args: { action: 'start' } },
+    { phrase: 'ferma la registrazione', args: { action: 'stop' } }
+  ],
+  'capture.color': ['prendi un colore', 'che colore è questo', 'campiona un colore'],
+  'capture.qr': ['leggi questo codice qr', 'scansiona il codice qr'],
+  'capture.text': ['copia il testo sullo schermo', 'leggi il testo sullo schermo'],
+  'camera.show': [
+    { phrase: 'mostra la telecamera', args: { enabled: true } },
+    { phrase: 'nascondi la telecamera', args: { enabled: false } }
+  ],
+
+  // Connections and continuity
+  'connection.list': ['mostra le connessioni', 'elenca le connessioni', 'cosa è collegato'],
+  'connection.show': ['apri la connessione {name}', 'mostra la connessione {name}'],
+  'connection.enable': ['attiva la connessione {name}', 'collega {name}'],
+  'connection.disable': ['disattiva la connessione {name}', 'scollega {name}'],
+  'continuity.catchUp': ['cosa stavo facendo', 'dove ero rimasto', 'riprendi da dove ero'],
+  'continuity.continue': ['continua da dove ero rimasto', 'continua {thread}', 'riapri {thread}'],
+  'continuity.nextStep': ['fai il passo successivo', 'passo successivo di {thread}'],
+
+  // Network, sound, screen, power
+  'panel.open': [
+    { phrase: 'mostra il wi-fi', args: { panel: 'wifi' } },
+    { phrase: 'mostra il bluetooth', args: { panel: 'bluetooth' } },
+    { phrase: 'mostra le impostazioni audio', args: { panel: 'audio' } },
+    { phrase: 'mostra lo schermo', args: { panel: 'display' } },
+    { phrase: 'mostra la batteria', args: { panel: 'power' } }
+  ],
+  'wifi.list': ['a che wi-fi sono collegato', 'elenca le reti wi-fi'],
+  'wifi.connect': ['collegati al wi-fi {network}', 'connettiti al wi-fi {network}'],
+  'wifi.power': [
+    { phrase: 'accendi il wi-fi', args: { enabled: true } },
+    { phrase: 'spegni il wi-fi', args: { enabled: false } }
+  ],
+  'bluetooth.list': ['quali dispositivi bluetooth sono collegati', 'elenca i dispositivi bluetooth'],
+  'bluetooth.power': [
+    { phrase: 'accendi il bluetooth', args: { enabled: true } },
+    { phrase: 'spegni il bluetooth', args: { enabled: false } }
+  ],
+  'bluetooth.connect': [
+    'collega il dispositivo {device}',
+    { phrase: 'scollega il dispositivo {device}', args: { connected: false } }
+  ],
+  'audio.output': ['riproduci su {device}', 'manda laudio su {device}', 'usa {device} per il suono'],
+  'audio.volume': [
+    'imposta il volume a {percent}',
+    'volume {percent}',
+    { phrase: 'muta il suono', args: { muted: true } },
+    { phrase: 'riattiva il suono', args: { muted: false } }
+  ],
+  'display.brightness': ['imposta la luminosità a {percent}', 'luminosità {percent}'],
+  'display.scale': [
+    'imposta la scala dello schermo a {scale}',
+    { phrase: 'ingrandisci tutto', args: { scale: 1.25 } }
+  ],
+  'power.profile': [
+    { phrase: 'risparmia energia', args: { profile: 'power-saver' } },
+    { phrase: 'modalità prestazioni', args: { profile: 'performance' } },
+    { phrase: 'modalità bilanciata', args: { profile: 'balanced' } }
+  ],
+  'power.status': ['quanta batteria è rimasta', 'stato della batteria', 'sto caricando'],
+
+  // Crashes
+  'crash.list': ['cosa è andato in crash', 'mostra i crash recenti', 'elenca i crash'],
+  'crash.diagnose': [
+    'perché {crash} è andato in crash',
+    'diagnostica il crash di {crash}',
+    { phrase: 'perché è andato in crash', args: {} }
+  ],
+  'crash.mute': [
+    'smetti di avvisarmi quando va in crash {app}',
+    { phrase: 'avvisami di nuovo quando va in crash {app}', args: { muted: false } }
+  ],
+  'crash.help': [
+    { phrase: 'attiva laiuto sui crash', args: { enabled: true } },
+    { phrase: 'disattiva laiuto sui crash', args: { enabled: false } }
+  ],
+
+  // Documents
+  'docs.open': ['apri herald docs', 'apri il programma di scrittura'],
+  'docs.new': ['nuovo documento', 'crea un documento', 'nuovo doc'],
+  'docs.save': ['salva il documento'],
+  'sheets.open': ['apri herald sheets', 'apri il programma di fogli'],
+  'sheets.new': ['nuovo foglio', 'nuova cartella di lavoro', 'nuovo spreadsheet'],
+  'sheets.save': ['salva il foglio'],
+  'slides.open': ['apri herald slides', 'apri il programma di presentazioni'],
+  'slides.new': ['nuova presentazione', 'nuove slide', 'nuovo mazzo di slide'],
+  'slides.addSlide': ['nuova diapositiva', 'aggiungi una diapositiva', 'aggiungi una slide'],
+  'slides.save': ['salva la presentazione'],
+
+  // Typing and keys. 'scrivi {text}' stays out on purpose: "scrivi una poesia" is a request, not text to type.
+  'text.type': ['digita {text}', 'detta {text}'],
+  'key.press': [
+    'premi {key}',
+    'premi il tasto {key}',
+    { phrase: 'premi invio', args: { key: 'enter' } },
+    { phrase: 'invio', args: { key: 'enter' } }
+  ],
+  'text.newLine': ['nuova riga', 'vai a capo'],
+
+  // Editing
+  'edit.selectAll': ['seleziona tutto', 'seleziona tutto il testo'],
+  'edit.select': [
+    { phrase: 'seleziona la parola', args: { scope: 'word' } },
+    { phrase: 'seleziona la parola precedente', args: { scope: 'word' } },
+    { phrase: 'seleziona la riga', args: { scope: 'line' } }
+  ],
+  'edit.deselect': ['deseleziona', 'annulla la selezione'],
+  'edit.copy': ['copia', 'copia questo'],
+  'edit.cut': ['taglia', 'taglia questo'],
+  'edit.paste': ['incolla', 'incolla qui'],
+  'edit.undo': ['annulla', 'annulla la modifica'],
+  'edit.redo': ['rifai', 'ripeti'],
+  'edit.delete': [
+    { phrase: 'cancella la selezione', args: { what: 'selection' } },
+    { phrase: 'cancella quello', args: { what: 'selection' } },
+    { phrase: 'cancella tutto', args: { what: 'all' } }
+  ],
+  'view.scroll': [
+    { phrase: 'scorri giù', args: { direction: 'down' } },
+    { phrase: 'scorri su', args: { direction: 'up' } },
+    { phrase: 'vai giù', args: { direction: 'down' } },
+    { phrase: 'vai su', args: { direction: 'up' } },
+    { phrase: 'scorri in fondo', args: { direction: 'bottom' } },
+    { phrase: 'torna in cima', args: { direction: 'top' } }
+  ],
+
+  // Files
+  'file.open': ['apri il file {name}', 'mostra il file {name}'],
+  'file.openExternal': ['apri fuori', 'apri in unaltra app', 'apri esternamente'],
+  'files.open': ['apri la cartella {place}', 'mostra la cartella {place}'],
+  'files.search': ['cerca i file {query}', 'trova i file {query}'],
+  'files.reveal': ['mostra nel finder', 'mostra questo file nel finder'],
+  'files.newFolder': ['crea una cartella {name}', 'nuova cartella {name}'],
+  'chat.popout': ['stacca la chat', 'apri la chat in una finestra'],
+  'agents.toolSearch.set': [
+    { phrase: 'attiva la ricerca strumenti', args: { enabled: true } },
+    { phrase: 'disattiva la ricerca strumenti', args: { enabled: false } }
+  ],
+
+  // Menu bar, widgets, screen, usage
+  'bar.show': ['mostra {item} nella barra dei menu'],
+  'bar.hide': ['nascondi {item} dalla barra dei menu'],
+  'bar.clock': [
+    { phrase: 'orologio a 24 ore', args: { hours: '24' } },
+    { phrase: 'orologio a 12 ore', args: { hours: '12' } },
+    { phrase: 'mostra i secondi nellorologio', args: { seconds: true } }
+  ],
+  'plugin.manage': ['gestisci i plugin', 'mostra i widget'],
+  'screen.askRegion': ['chiedi di questa parte dello schermo', 'cosa è questo sullo schermo'],
+  'usage.show': ['quanto ho usato', 'mostra il mio consumo', 'quanto mi resta del piano'],
+
+  // Software, building, studio, apps, web
+  'software.install': ['installa {name}', 'scarica e installa {name}'],
+  'software.remove': ['disinstalla {name}', 'rimuovi {name}'],
+  'software.agent': ['apri {name} nel terminale', 'avvia {name} nel terminale'],
+  'build.start': ['costruisci {goal}', 'creami {goal}'],
+  'studio.open': ['mostra il codice', 'mostra cosa stai facendo', 'mostra cosa hai fatto'],
+  'studio.preview': ['anteprima {url}', 'mostra lanteprima di {url}'],
+  'studio.file': ['apri {path} nello studio', 'mostra {path} nello studio'],
+  'studio.close': ['chiudi lo studio', 'nascondi lo studio'],
+  'native.launch': ['apri lapp {name}', 'avvia lapp {name}'],
+  'web.open': ['apri il sito {url}', 'vai al sito {url}'],
+
+  // Settings and look
+  'settings.open': ['apri le impostazioni', 'apri la sezione {section}', 'mostra le impostazioni {section}'],
+  'accent.set': ['imposta laccento su {accent}', 'cambia il colore di accento in {accent}'],
+  'motion.reduce': [
+    { phrase: 'riduci le animazioni', args: { enabled: true } },
+    { phrase: 'attiva le animazioni', args: { enabled: false } }
+  ],
+  'dock.autoHide': [
+    { phrase: 'nascondi il dock', args: { enabled: true } },
+    { phrase: 'mostra il dock', args: { enabled: false } }
+  ],
+  'theme.list': ['quali temi ci sono', 'mostra i temi'],
+  'theme.set': ['imposta il tema {theme}', 'cambia il tema in {theme}', 'usa il tema {theme}'],
+  'theme.generate': ['crea un tema dallo sfondo', 'crea un tema da questo sfondo'],
+  'theme.followHermes': [
+    { phrase: 'segui il tema di hermes', args: { enabled: true } },
+    { phrase: 'smettere di seguire il tema di hermes', args: { enabled: false } }
+  ],
+  'wallpaper.set': [{ phrase: 'usa lo sfondo predefinito', args: { image: 'default' } }],
+  'font.set': ['usa il carattere {family}', 'imposta il carattere {family}', { phrase: 'imposta il carattere del codice a {family}', args: { kind: 'mono' } }],
+  'dictation.toggle': ['avvia la dettatura', 'ferma la dettatura', 'dettatura'],
+  'emoji.pick': ['emoji', 'apri il selettore emoji', 'inserisci una emoji'],
+  'keymap.set': [
+    { phrase: 'usa il keymap omarchy', args: { keymap: 'omarchy' } },
+    { phrase: 'usa il keymap herald', args: { keymap: 'herald' } }
+  ]
 }
 
 /** Return the groups with the Italian phrases appended to their commands. */
