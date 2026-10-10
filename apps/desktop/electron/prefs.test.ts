@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import type { CalendarReminderPrefs } from '../shared/ipc.ts'
 import { heraldOsDataDir } from './paths.ts'
 import { readPrefs, writePrefs } from './prefs.ts'
 
@@ -114,8 +115,11 @@ describe('the reminder before an event in the prefs', () => {
   })
 
   it('keeps the other field through a change and patches it field by field', () => {
+    // A caller over the wire may send only the field it changes; the one it leaves out is kept.
+    const only = (patch: Partial<CalendarReminderPrefs>) => patch as CalendarReminderPrefs
+
     store({ calendarReminder: { enabled: false, minutesBefore: 30 } })
-    expect(writePrefs({ calendarReminder: { minutesBefore: 5 } }).calendarReminder).toEqual({ enabled: false, minutesBefore: 5 })
-    expect(writePrefs({ calendarReminder: { enabled: true } }).calendarReminder).toEqual({ enabled: true, minutesBefore: 5 })
+    expect(writePrefs({ calendarReminder: only({ minutesBefore: 5 }) }).calendarReminder).toEqual({ enabled: false, minutesBefore: 5 })
+    expect(writePrefs({ calendarReminder: only({ enabled: true }) }).calendarReminder).toEqual({ enabled: true, minutesBefore: 5 })
   })
 })

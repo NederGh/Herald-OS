@@ -1,7 +1,7 @@
 import { atom } from 'nanostores'
 import type { BackendState, EnvInfo, HeraldOSPrefs, WindowState } from '../../shared/ipc.ts'
 import { PALETTE_PROPERTIES, paletteVars, schemeOf } from '../../shared/theme.ts'
-import { CALENDAR_REMINDER_DEFAULTS } from '../../shared/calendar-reminder.ts'
+import { CALENDAR_REMINDER_DEFAULTS, normalizeCalendarReminder } from '../../shared/calendar-reminder.ts'
 import { VOICE_DEFAULTS } from '../../shared/voice-prefs.ts'
 
 /** Cache of Electron's backend truth; Electron is authoritative. */
@@ -60,10 +60,18 @@ export function applyPrefsToDocument(prefs: HeraldOSPrefs): void {
 }
 
 export async function updatePrefs(patch: Partial<HeraldOSPrefs>): Promise<void> {
-  const next = await window.heraldOS.prefs.set(patch)
+  const next = completePrefs(await window.heraldOS.prefs.set(patch))
   $prefs.set(next)
   applyPrefsToDocument(next)
 }
+
+/*
+ * Main owns the shape of the prefs (electron/prefs.ts normalizes every read and write). The one way
+ * the renderer can be handed an object missing a required preference is a main process older than
+ * the field — a half-updated dev run, where the renderer reloads live and main does not. Complete it
+ * once here, from the same shared defaults main uses, so no section can fail on a missing field.
+ */
+const completePrefs = (prefs: HeraldOSPrefs): HeraldOSPrefs => ({ ...prefs, calendarReminder: normalizeCalendarReminder(prefs.calendarReminder) })
 
 export function bindBackendStores(): () => void {
   const offBackend = window.heraldOS.backend.onState(state => $backend.set(state))
@@ -72,12 +80,12 @@ export function bindBackendStores(): () => void {
   void window.heraldOS.window.getState().then(state => $windowState.set(state))
   void window.heraldOS.env().then(info => $env.set(info))
   void window.heraldOS.prefs.get().then(prefs => {
-    $prefs.set(prefs)
+    $prefs.set(completePrefs(prefs))
     applyPrefsToDocument(prefs)
   })
   // Preferences changed by another surface window or by the `herald-os` CLI (theme, wallpaper).
   const offPrefs = window.heraldOS.prefs.onChanged?.(prefs => {
-    $prefs.set(prefs)
+    $prefs.set(completePrefs(prefs))
     applyPrefsToDocument(prefs)
   })
 
