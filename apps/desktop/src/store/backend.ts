@@ -1,6 +1,7 @@
 import { atom } from 'nanostores'
 import type { BackendState, EnvInfo, HeraldOSPrefs, WindowState } from '../../shared/ipc.ts'
 import { PALETTE_PROPERTIES, paletteVars, schemeOf } from '../../shared/theme.ts'
+import { CALENDAR_REMINDER_DEFAULTS } from '../../shared/calendar-reminder.ts'
 import { VOICE_DEFAULTS } from '../../shared/voice-prefs.ts'
 
 /** Cache of Electron's backend truth; Electron is authoritative. */
@@ -18,7 +19,8 @@ export const $prefs = atom<HeraldOSPrefs>({
   voice: VOICE_DEFAULTS,
   // Off until the real prefs arrive, so the Overview never flashes the catch-up offer.
   continuity: { enabled: false, exclude: [] },
-  crashHelp: { enabled: true, muted: [] }
+  crashHelp: { enabled: true, muted: [] },
+  calendarReminder: CALENDAR_REMINDER_DEFAULTS
 })
 
 /** A font family as a CSS value (quoted unless it is a generic family). */
