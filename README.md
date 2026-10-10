@@ -10,16 +10,9 @@
 
 > ### This is a fork
 >
-> It is [iamlukethedev/Herald-OS](https://github.com/iamlukethedev/Herald-OS) — Luke's project, the one described below — with a personal layer of work kept on top. `main` mirrors the original; everything this fork adds lives in the branches, and **this branch (`integration/our-work`) carries all of it at once**.
+> It is [iamlukethedev/Herald-OS](https://github.com/iamlukethedev/Herald-OS), with a personal layer of work on top. This branch — `integration/our-work`, also this fork's default — carries all of it, and it is kept up to date: a download from here is always the latest version.
 >
-> **What it adds:**
-> - **Voice in Italian, end to end** — the fast path understands Italian across the whole command catalogue (137 commands), with Italian names for pages and apps ("apri le impostazioni", "apri Herald Docs", "chiudi questa finestra").
-> - **A bot picker** — choose which Hermes bot (its identity, memory and voice) a conversation runs as; the conversation and its voice stay with that bot.
-> - **A microphone picker** — the input device is chosen inside Herald (Sound panel and Settings), with a live level bar and a quiet fallback when a chosen device goes away. Proposed upstream as [PR #84](https://github.com/iamlukethedev/Herald-OS/pull/84).
-> - **A calendar reminder** — the shell watches the same calendar the clock panel shows and raises a reminder a few minutes before an event (Settings → Notifications).
-> - **A Studio fix** — the file tree accepts the home folder itself as a project.
->
-> **Where the changes are:** each feature also lives on its own branch — `feature/audio-devices`, `feature/bot-picker`, `personal/voice-italian`, `fix/studio-home-folder` — and `main` mirrors the original. This branch is updated whenever the work moves, so a download from here is always the latest version.
+> **What this fork adds, and where the changes live → [FORK.md](FORK.md)**
 
 <p align="center">
   <a href="https://github.com/iamlukethedev/Herald-OS/releases"><img src="https://img.shields.io/github/v/release/iamlukethedev/Herald-OS?include_prereleases&label=release" alt="Latest release"></a>
