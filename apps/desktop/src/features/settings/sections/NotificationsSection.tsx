@@ -1,14 +1,18 @@
 import { useStore } from '@nanostores/react'
-import { IconBellRinging, IconBug, IconChecklist, IconDeviceDesktop, IconShieldCheck, IconVolumeOff, IconX } from '@tabler/icons-react'
+import { IconBellRinging, IconBug, IconCalendarEvent, IconChecklist, IconClock, IconDeviceDesktop, IconShieldCheck, IconVolumeOff, IconX } from '@tabler/icons-react'
 import { useState } from 'react'
+import { REMINDER_MINUTES } from '../../../../shared/calendar-reminder.ts'
+import type { CalendarReminderPrefs } from '../../../../shared/ipc.ts'
 import { Toggle } from '../../../components/ui/glass.tsx'
-import { $prefs } from '../../../store/backend.ts'
+import { $prefs, updatePrefs } from '../../../store/backend.ts'
 import { setCrashHelpEnabled, setCrashMuted } from '../../../store/crashes.ts'
-import { errorText, InlineNote, markSaved, readLocalFlag, SectionTitle, SettingsGroup, SettingsRow, writeLocal } from './shared.tsx'
+import { errorText, InlineNote, markSaved, readLocalFlag, SectionTitle, SettingsGroup, SettingsRow, Stepper, writeLocal } from './shared.tsx'
 
 /*
  * Notification preferences are shell-side flags in localStorage (`herald-os.notify.*`). The
  * notification store does not read them yet; see the page report for the proposed wiring.
+ * The calendar reminder is the exception: it is a real preference in prefs.json, because Electron
+ * main watches the calendar and reads the setting from there.
  */
 
 export const NOTIFY_KEYS = {
@@ -53,8 +57,52 @@ export function NotificationsSection() {
         ))}
       </SettingsGroup>
 
+      <CalendarReminderGroup />
       <CrashHelpGroup />
     </>
+  )
+}
+
+function CalendarReminderGroup() {
+  const { calendarReminder } = useStore($prefs)
+  const [error, setError] = useState<string | null>(null)
+
+  const save = (patch: Partial<CalendarReminderPrefs>) =>
+    updatePrefs({ calendarReminder: { ...calendarReminder, ...patch } }).then(
+      () => {
+        setError(null)
+        markSaved()
+      },
+      reason => setError(errorText(reason))
+    )
+
+  return (
+    <SettingsGroup title="Calendar">
+      <SettingsRow
+        icon={<IconCalendarEvent />}
+        label="Remind me before an event"
+        description="A few minutes before each of today's events starts: a toast in Herald OS, and a system notification when it is not in front. Needs Calendar access, which the clock panel in the menu bar asks for the first time it is opened."
+        keywords="event meeting appointment upcoming agenda reminder"
+        below={error ? <InlineNote tone="danger">{error}</InlineNote> : undefined}
+      >
+        <Toggle checked={calendarReminder.enabled} onChange={next => void save({ enabled: next })} label="Remind me before an event" />
+      </SettingsRow>
+      <SettingsRow
+        icon={<IconClock />}
+        label="Minutes before"
+        description="How early the reminder arrives."
+        keywords="lead time early ahead minutes"
+      >
+        <Stepper
+          value={calendarReminder.minutesBefore}
+          onChange={next => void save({ minutesBefore: next })}
+          min={REMINDER_MINUTES.min}
+          max={REMINDER_MINUTES.max}
+          disabled={!calendarReminder.enabled}
+          label="Minutes before"
+        />
+      </SettingsRow>
+    </SettingsGroup>
   )
 }
 

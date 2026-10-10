@@ -339,6 +339,26 @@ export interface CrashHelpPrefs {
   muted: string[]
 }
 
+export interface CalendarReminderPrefs {
+  /** Arrive before each of today's events starts (on by default). */
+  enabled: boolean
+  /** How many minutes before the event starts the reminder arrives. */
+  minutesBefore: number
+}
+
+/** Main -> renderer: an event on today's calendar is about to start (a `calendar-soon` ShellCommand). */
+export interface CalendarReminderNotice {
+  /** One per event per day; the shell keys its notification entry on it, so a re-armed timer cannot double it. */
+  key: string
+  /** The event's own id, for anything that wants to act on the event itself. */
+  id: string
+  title: string
+  /** Epoch ms the event starts. */
+  start: number
+  /** Minutes before the start this reminder ran. */
+  minutes: number
+}
+
 export interface ImageInfo {
   width: number
   height: number
@@ -591,6 +611,8 @@ export interface HeraldOSPrefs {
   voice: VoicePrefs
   continuity: ContinuityPrefs
   crashHelp: CrashHelpPrefs
+  /** Arrive before each of today's events starts: a Herald toast, and a system notification when the window is not in front. */
+  calendarReminder: CalendarReminderPrefs
 }
 
 export type ScreenshotMode = 'region' | 'window' | 'screen'

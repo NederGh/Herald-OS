@@ -7,6 +7,7 @@ import { forgetInheritedSession } from './backend/session-env.ts'
 import { CrashWatcher } from './crash/watch.ts'
 import { fireEventAutomations } from './events/automations.ts'
 import { events } from './events/bus.ts'
+import { type CalendarReminders, startCalendarReminders } from './events/calendar.ts'
 import { runHooks } from './events/hooks.ts'
 import { run } from './platform/exec.ts'
 import { startEventSources } from './events/sources.ts'
@@ -188,6 +189,8 @@ events.on(event => {
   runHooks(event)
   void fireEventAutomations(event, backend)
 })
+/** Watches today's events for the reminders; started once the app is ready. */
+let calendarReminders: CalendarReminders | null = null
 
 if (!app.requestSingleInstanceLock()) {
   app.quit()
@@ -252,6 +255,10 @@ function registerCoreIpc(): void {
 
     if ('doNotDisturb' in patch || 'screensaver' in patch) {
       void switches.broadcast()
+    }
+
+    if ('calendarReminder' in patch) {
+      calendarReminders?.refresh()
     }
 
     // The keymap lives in niri's config, which the CLI renders (niri reloads it by itself).
@@ -364,6 +371,9 @@ app.whenReady().then(async () => {
   events.registerIpc()
   crashes.start()
   startEventSources()
+  // The reminder before each of today's events: the same calendar the clock panel reads, watched here
+  // so it still arrives while the window is in the background.
+  calendarReminders = startCalendarReminders(reminder => toHermesWindow({ type: 'calendar-soon', payload: { ...reminder } } satisfies ShellCommand))
   switches.start()
   backend.onState(state => {
     for (const win of BrowserWindow.getAllWindows()) {

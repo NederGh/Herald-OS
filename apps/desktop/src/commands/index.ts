@@ -7,6 +7,7 @@ import { connectionCommands } from './connections.ts'
 import { continuityCommands } from './continuity.ts'
 import { controlCommands } from './controls.ts'
 import { crashCommands } from './crash.ts'
+import { calendarCommands } from './calendar.ts'
 import { docsCommands } from './docs.ts'
 import { editCommands } from './edit.ts'
 import { filesCommands } from './files.ts'
@@ -44,6 +45,7 @@ export const commandGroups: Record<string, readonly OsCommand[]> = withItalianPh
   open: openCommands,
   continuity: continuityCommands,
   crash: crashCommands,
+  calendar: calendarCommands,
   themes: themeCommands,
   screen: screenCommands,
   controls: controlCommands,

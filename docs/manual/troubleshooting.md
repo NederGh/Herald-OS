@@ -34,6 +34,9 @@ Herald OS is running but something misbehaves.
   mute it from the notification if you do not need the offers.
 - **macOS shows no notifications from Herald OS.** macOS only delivers notifications from signed
   builds; inside Herald OS they still appear in the bell.
+- **I get no reminder before an event.** Settings > Notifications > Calendar must be on, Herald OS
+  must be running, and Calendar access must be granted (the clock panel in the menu bar asks for it).
+  `[calendar]` lines in `~/.hermes/logs/herald-os.log` say what the calendar answered.
 
 ## Hooks and event automations
 
