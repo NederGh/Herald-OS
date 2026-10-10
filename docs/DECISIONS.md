@@ -857,3 +857,54 @@ Alternatives considered:
 - **Rejected: pivot tables for Sheets' summaries.** A real pivot table needs a cache that Excel
   works out and Univer's open-source packages cannot show; formulas over whole columns give the
   same table, stay live in every spreadsheet app, and need nothing of Herald's to read.
+
+## ADR-022: The reminder before an event is the shell's, read from the same calendar the clock panel shows
+
+**Status: Accepted.**
+
+The clock panel reads today's events through the EventKit bridge and shows them; nothing follows
+them, so an event arrives unannounced unless the person set an alert on it in their own calendar —
+and nothing in the bridge says whether they did. Herald OS therefore watches the same reading and
+raises a reminder a few minutes before each event starts: a toast in the shell, and a system
+notification when the window is not in front, at a lead time the person chooses in Settings >
+Notifications > Calendar and can turn off.
+
+- **Main watches, the shell shows.** Chromium throttles a renderer's timers the moment its window is
+  not in front, which is exactly when a reminder matters, so the watch lives in Electron main
+  (`electron/events/calendar.ts`) and hands the shell a `calendar-soon` ShellCommand. The toast, the
+  bell entry and the system notification stay in the store that already raises them, and the entry is
+  keyed by the reminder so a second arrival replaces rather than stacks.
+- **The setting is a real preference; the flags beside it are not.** The other rows in that section
+  are shell-side localStorage flags; this one is in `prefs.json` (`calendarReminder`), because main
+  reads it, and it is normalized in one place (`shared/calendar-reminder.ts`) for both sides.
+- **One read, then one timer.** Today's events are read once, the next moment is worked out, one
+  timer waits for it — not a poll every minute. The reading is refreshed every ten minutes as a
+  safety net, so an event created after the last read still reminds, and again when the machine
+  wakes, where a timer set before the sleep means nothing.
+- **A moment that passed is not a moment lost.** A machine that slept through the moment still
+  reminds while the event is ahead: a late "starts in three minutes" beats silence. An event that has
+  already started is left alone.
+- **One reminder per event per day.** The key is the local day and the event's id, so a re-armed
+  timer cannot double up. Changing the lead time clears the marks, because a different lead time asks
+  for a different moment.
+- **An all-day event has no moment to remind about.** It is skipped, and so is every event of a
+  calendar the bridge cannot read.
+- **Reminders off means the calendar is never read.** No read happens at all while the setting is
+  off, so the calendar is only touched by someone who asked for this.
+- **A calendar that refuses says so.** Access that is denied, restricted or never asked for leaves
+  reminders silent and writes the reason to `~/.hermes/logs/herald-os.log` on a `[calendar]` line;
+  the clock panel still reports the state in its own words.
+- **Rejected: leaving reminders to the calendar's own alerts.** They exist, they work with Herald OS
+  closed, and they are per event — but they are unset by default, and the bridge does not read
+  EventKit's alarms, so the panel cannot truthfully say "you are already covered". Nothing stops a
+  person from setting them; this reminder is the one Herald OS can see and speak about.
+- **Rejected: a Hermes cron job.** It is minute-granular, it only runs while the gateway is up, and
+  the reminder is a property of the shell's own reading of the calendar, not a scheduled prompt.
+- **Rejected: a renderer timer.** Throttled in the background, which is the one case that matters.
+- **Rejected: a new Herald event in `shared/events.ts`.** That vocabulary is what people's hook
+  scripts and Hermes automations are offered; a reminder is a notification the shell raises, not
+  something about this computer that other things should react to. If a calendar event ever earns a
+  place there, it is a separate decision.
+- **Carried forward, not yet done:** a lead time per calendar, reminders for events from a connected
+  calendar rather than the system one, and a snooze action on the reminder itself.
+
