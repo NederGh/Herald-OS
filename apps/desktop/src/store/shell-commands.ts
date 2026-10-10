@@ -1,6 +1,7 @@
-import type { CrashReport, ShellCommand } from '../../shared/ipc.ts'
+import type { CalendarReminderNotice, CrashReport, ShellCommand } from '../../shared/ipc.ts'
 import { HERMES_APPS, type HermesAppId, PAGES, type PageId } from '../shell/apps.ts'
 import { composePrompt } from '../shell/surfaces/shell-utils.ts'
+import { reminderLine } from '../lib/event-reminder.ts'
 import { runHeraldOsWithToast } from '../lib/herald-os-cli.ts'
 import { updatePrefs } from './backend.ts'
 import { openStoredSession, runSlash, sendPrompt } from './chat.ts'
@@ -85,6 +86,23 @@ export function handleShellCommand(command: ShellCommand): void {
 
       if (title) {
         notify({ title, body: rest.join(' ') || command.text || undefined })
+      }
+
+      return
+    }
+    case 'calendar-soon': {
+      // Main watched today's calendar and an event is about to start: a toast here, and a system
+      // notification when the window is not in front (the point of the whole thing).
+      const reminder = command.payload as unknown as Partial<CalendarReminderNotice> | undefined
+
+      if (reminder?.title && typeof reminder.start === 'number') {
+        notify({
+          title: reminder.title,
+          body: reminderLine(reminder.start, Date.now()),
+          key: `calendar:${reminder.key ?? reminder.id ?? reminder.title}`,
+          native: true,
+          actions: [{ label: 'See today', command: 'panel.open', args: { panel: 'clock' } }]
+        })
       }
 
       return
