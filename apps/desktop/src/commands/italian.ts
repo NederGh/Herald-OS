@@ -40,6 +40,7 @@ export const ITALIAN_APP_ALIASES: Record<string, HermesAppId> = {
   telecamera: 'camera',
   fotocamera: 'camera',
   dox: 'docs',
+  docks: 'docs',
   fogli: 'sheets',
   presentazioni: 'slides'
 }

@@ -47,6 +47,7 @@ describe('Italian names resolve like the English ones', () => {
     expect(resolveAppId('terminale')).toBe('terminal')
     expect(resolveAppId('il terminale')).toBe('terminal')
     expect(resolveAppId('dox')).toBe('docs')
+    expect(resolveAppId('docks')).toBe('docs')
   })
 
   it('ships the alias maps the resolver consumes', () => {
